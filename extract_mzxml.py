@@ -1,12 +1,18 @@
 from pyteomics import mzxml, auxiliary
 
 def read_data(file):
+    """
+    read mzxml file using pyteomics.mzxml
+    """
     data = mzxml.MzXML(file)
     print(str(file), 'has been accepted')
 
     return data
 
 def count_MS2(data):
+    """
+    count total number scans and MS2 scans in the data
+    """
     tot_ms2 = 0
     tot_ms1 = 0
 
@@ -21,6 +27,10 @@ def count_MS2(data):
     print('Count %s MS2 scans in data' %(str(tot_ms2)))
 
 def find_MS2(data, directory):
+    """
+    find MS2 scans from the data
+    output to a list of indexes of MS2 scans
+    """
     id_list_ms1 = []
     id_list_ms2 = []
     
@@ -43,6 +53,10 @@ def find_MS2(data, directory):
     return id_list_ms2
 
 def list_retentionTime_MS2(data, id_list_ms2):
+    """
+    list retentionTime for MS2 scans
+    used to demonstrate syntax of accessing elements in the parsed mxzml
+    """
     rt_list_ms2 = []
 
     for i in id_list_ms2:
@@ -51,61 +65,66 @@ def list_retentionTime_MS2(data, id_list_ms2):
     return rt_list_ms2
 
 def bin_MS2(data, id_list_ms2):
+    """
+    create bins of data based on retentionTime param
+    """
     rt_bin = 30.0
 
-
-
-def cast_id_int(id_list_ms2):
-    id_list = []
-
-    for num in id_list_ms2:
-        id_list.append(int(num))
-
 def search_MS2_pairs(data, id_list_ms2):
+    """
+    search for same molecules in MS2 scans
+    same molecules are based on mass ('precursorMz') with a tolerance (mass_tolerance)
+    same molecules are found within a bin of retentionTime (rt_tolerance)
+    generates a dictionary of scan indexes mapped to a list of matching scan indexes
+    outputs a .txt and .json file for review
+    """
     print('Beginning the search')
-    pair_dict = {}
-    rt_tolerance = 30.0
-    mass_tolerance = 0.1
-
-    for i in id_list_ms2:
-        rt_save = float(data[i].get('retentionTime'))
-        mass_save = float(data[i].get('precursorMz')[0].get('precursorMz'))
-        ce_save = float(data[i].get('collisionEnergy'))
-        for n in id_list_ms2:
-            if n > i:
-                rt_dn = data[n].get('retentionTime')
-                if rt_dn <= rt_save + rt_tolerance and rt_dn >= rt_save - rt_tolerance: #upperbound and lowerbound
-                    mass_dn = data[n].get('precursorMz')[0].get('precursorMz')
-                    if mass_dn <= mass_save + mass_tolerance and mass_dn >= mass_save - mass_tolerance:
-                        ce_dn = data[n].get('collisionEnergy')
-                        if ce_dn == ce_save:
-                            pair_dict[i] = n
-                            print('Found a match: ', i, ':', n)
-        print('finished search for dict[', i, ']')
-    return pair_dict
-
-def search_MS2_pairs2(data, id_list_ms2):
-    print('Beginning the search')
-    pair_dict = {}
-    rt_tolerance = 30.0
-    mass_tolerance = 0.1
+    pair_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
+    rt_tolerance = 30.0 #retentionTime tolerance for half a minute
+    mass_tolerance = 0.01 #mass tolerance for 0.01mZ
 
     for k in id_list_ms2:
-        if k not in pair_dict.values():
-            rt_save = float(data[k].get('retentionTime'))
-            mass_save = float(data[k].get('precursorMz')[0].get('precursorMz'))
-            
+        rt_save = float(data[k].get('retentionTime'))
+        mass_save = float(data[k].get('precursorMz')[0].get('precursorMz'))
+        v_list = []
+        redun_check = False #initialize redundancy check boolean as not-redundant
+
+        for value in pair_dict.values():
+            for index in range(0, len(value)):
+                if k == value[index]:
+                    redun_check = True              
+
+        if redun_check != True:
             for v in id_list_ms2:
-                v_list = []
                 if v != k:
                     rt_dv = data[v].get('retentionTime')
                     if rt_dv <= rt_save + rt_tolerance and rt_dv >= rt_save - rt_tolerance:
                         mass_dv = data[v].get('precursorMz')[0].get('precursorMz')
                         if mass_dv <= mass_save + mass_tolerance and mass_dv >= mass_save - mass_tolerance:
                             v_list.append(v)
-                            print('Found a match: %s:%r' %(str(k), str(v)))
+                            print('Found a match: %s:%r' %(k, v))
                 pair_dict[k] = v_list
-                print(pair_dict[k].items())
-            print('Finished search for dict[%s]' %(str(k)))
+            print(k, pair_dict[k])
+            print('Finished search for dict[%s]' %k)
+            redun_check = False #reset redundancy check boolean
+        else:
+            redun_check = False #reset redundancy check boolean 
     
     return pair_dict
+
+def output_search_dict(pair_dict, directory):
+    """
+    output the dictionary from search_MS2_pairs into files
+    outputs .txt and .json
+    """
+    import json
+    json = json.dumps(pair_dict)
+    filename = directory + '/pair_dict.json'
+    with open(filename, 'w') as output:
+        output.write(json)
+    print('saved pair_dict to "pair_dict.json"')
+
+    filename = directory + '/pair_dict.txt'
+    with open(filename, 'w') as output:
+        output.write(str(pair_dict))
+    print('saved pair_dict to "pair_dict.txt"')
