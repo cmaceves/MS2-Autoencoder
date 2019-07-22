@@ -82,10 +82,13 @@ def search_MS2_pairs(data, id_list_ms2):
     pair_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
     rt_tolerance = 30.0 #retentionTime tolerance for half a minute
     mass_tolerance = 0.01 #mass tolerance for 0.01mZ
+    intensity_tolerance_low = 2 #greater than 2x precursorIntensity from base molecule
+    intensity_tolerance_up = 5 #less than 5x precursorIntensity from base molecule
 
     for k in id_list_ms2:
         rt_save = float(data[k].get('retentionTime'))
         mass_save = float(data[k].get('precursorMz')[0].get('precursorMz'))
+        intensity_save = float(data[k].get('precursorMz')[0].get('precursorIntensity'))
         v_list = []
         redun_check = False #initialize redundancy check boolean as not-redundant
 
@@ -101,8 +104,10 @@ def search_MS2_pairs(data, id_list_ms2):
                     if rt_dv <= rt_save + rt_tolerance and rt_dv >= rt_save - rt_tolerance:
                         mass_dv = data[v].get('precursorMz')[0].get('precursorMz')
                         if mass_dv <= mass_save + mass_tolerance and mass_dv >= mass_save - mass_tolerance:
-                            v_list.append(v)
-                            print('Found a match: %s:%r' %(k, v))
+                            intensity_dv = data[v].get('precursorMz')[0].get('precursorIntensity')
+                            if intensity_dv <= intensity_save * intensity_tolerance_up and intensity_dv >= intensity_tolerance_low:
+                                v_list.append(v)
+                                print('Found a match: %s:%r' %(k, v))
                 pair_dict[k] = v_list
             print(k, pair_dict[k])
             print('Finished search for dict[%s]' %k)
@@ -128,3 +133,23 @@ def output_search_dict(pair_dict, directory):
     with open(filename, 'w') as output:
         output.write(str(pair_dict))
     print('saved pair_dict to "pair_dict.txt"')
+
+def get_pair_scans(data, pair_dict):
+    processed_dict = {}
+    for key in pair_dict.keys():
+        processed_dict[key] = []
+        for index, i in zip(pair_dict[key], range(0, len(pair_dict[key]))):
+            scan = data[index].get('id'))
+            rt = data[index].get('retentionTime'))
+            intentsity = data[index].get('precursorMz')[0].get('precursorIntensity'))
+            mz = data[index].get('precursorMz')[0].get('precursorMz'))
+            mz_array = data[index].get('m/z array'))
+            intensity_array = data[index].get('intensity array'))
+            
+            processed_dict[key].append({scan:{}})
+            processed_dict[key][i][scan] = {'retentionTime':rt,
+                                            'precursorMz':mz,
+                                            'precursorIntensity':intensity
+                                            'm/z array':mz_array,
+                                            'intensity array':intensity_array}
+    return 0
