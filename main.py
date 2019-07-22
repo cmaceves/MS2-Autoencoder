@@ -3,8 +3,8 @@ import time
 
 start_time = time.time()
 
-file = 'cholesterol.mzxml'
-directory = 'C:/Users/CCheny/Documents/UC San Diego/Bioinformatics/MS2-Autoencoder/Output'
+file = 'HNP.mzxml'
+directory = 'C:/Users/CCheny/Documents/UC San Diego/Bioinformatics/MS2-Autoencoder/Output/HNP'
 
 data = em.read_data(file)
 em.count_MS2(data)
