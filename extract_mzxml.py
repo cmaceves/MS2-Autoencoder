@@ -64,12 +64,6 @@ def list_retentionTime_MS2(data, id_list_ms2):
 
     return rt_list_ms2
 
-def bin_MS2(data, id_list_ms2):
-    """
-    create bins of data based on retentionTime param
-    """
-    rt_bin = 30.0
-
 def search_MS2_pairs(data, id_list_ms2):
     """
     search for same molecules in MS2 scans
@@ -80,7 +74,7 @@ def search_MS2_pairs(data, id_list_ms2):
     """
     print('Beginning the search')
     pair_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
-    rt_tolerance = 30.0 #retentionTime tolerance for half a minute
+    rt_tolerance = 0.5 #retentionTime tolerance for half a minute
     mass_tolerance = 0.01 #mass tolerance for 0.01mZ
     intensity_tolerance_low = 2 #greater than 2x precursorIntensity from base molecule
     intensity_tolerance_up = 5 #less than 5x precursorIntensity from base molecule
@@ -99,15 +93,14 @@ def search_MS2_pairs(data, id_list_ms2):
 
         if redun_check != True:
             for v in id_list_ms2:
-                if v != k:
-                    rt_dv = data[v].get('retentionTime')
-                    if rt_dv <= rt_save + rt_tolerance and rt_dv >= rt_save - rt_tolerance:
-                        mass_dv = data[v].get('precursorMz')[0].get('precursorMz')
-                        if mass_dv <= mass_save + mass_tolerance and mass_dv >= mass_save - mass_tolerance:
-                            intensity_dv = data[v].get('precursorMz')[0].get('precursorIntensity')
-                            if intensity_dv <= intensity_save * intensity_tolerance_up and intensity_dv >= intensity_tolerance_low:
-                                v_list.append(v)
-                                print('Found a match: %s:%r' %(k, v))
+                rt_dv = data[v].get('retentionTime')
+                if rt_dv <= rt_save + rt_tolerance and rt_dv >= rt_save - rt_tolerance:
+                    mass_dv = data[v].get('precursorMz')[0].get('precursorMz')
+                    if mass_dv <= mass_save + mass_tolerance and mass_dv >= mass_save - mass_tolerance:
+                        intensity_dv = data[v].get('precursorMz')[0].get('precursorIntensity')
+                        if intensity_dv <= intensity_save * intensity_tolerance_up and intensity_dv >= intensity_tolerance_low:
+                            v_list.append(v)
+                            print('Found a match: %s:%r' %(k, v))
                 pair_dict[k] = v_list
             print(k, pair_dict[k])
             print('Finished search for dict[%s]' %k)
@@ -117,39 +110,59 @@ def search_MS2_pairs(data, id_list_ms2):
     
     return pair_dict
 
-def output_search_dict(pair_dict, directory):
+def output_search_dict(in_dict, directory, pair=None, scans=None):
     """
-    output the dictionary from search_MS2_pairs into files
+    output the dictionary from search_MS2_pairs and/or get_pair_scans into files
     outputs .txt and .json
     """
     import json
-    json = json.dumps(pair_dict)
-    filename = directory + '/pair_dict.json'
-    with open(filename, 'w') as output:
-        output.write(json)
-    print('saved pair_dict to "pair_dict.json"')
 
-    filename = directory + '/pair_dict.txt'
-    with open(filename, 'w') as output:
-        output.write(str(pair_dict))
-    print('saved pair_dict to "pair_dict.txt"')
+    if pair == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/pair_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved pair_dict to "pair_dict.json"')
+
+        filename = directory + '/pair_dict.txt'
+        with open(filename, 'w') as output:
+            output.write(str(in_dict))
+        print('saved pair_dict to "pair_dict.txt"')
+    elif scans == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/scan_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved scan_dict to "scan_dict.json"')
+
+        filename = directory + '/scan_dict.txt'
+        with open(filename, 'w') as output:
+            output.write(str(in_dict))
+        print('saved scan_dict to "scan_dict.txt"')        
 
 def get_pair_scans(data, pair_dict):
     processed_dict = {}
     for key in pair_dict.keys():
         processed_dict[key] = []
         for index, i in zip(pair_dict[key], range(0, len(pair_dict[key]))):
-            scan = data[index].get('id'))
-            rt = data[index].get('retentionTime'))
-            intentsity = data[index].get('precursorMz')[0].get('precursorIntensity'))
-            mz = data[index].get('precursorMz')[0].get('precursorMz'))
-            mz_array = data[index].get('m/z array'))
-            intensity_array = data[index].get('intensity array'))
+            scan = data[index].get('id')
+            rt = data[index].get('retentionTime')
+            intensity = data[index].get('precursorMz')[0].get('precursorIntensity')
+            mz = data[index].get('precursorMz')[0].get('precursorMz')
+            mz_array = data[index].get('m/z array').tolist()
+            intensity_array = data[index].get('intensity array').tolist()
             
             processed_dict[key].append({scan:{}})
             processed_dict[key][i][scan] = {'retentionTime':rt,
                                             'precursorMz':mz,
-                                            'precursorIntensity':intensity
+                                            'precursorIntensity':intensity,
                                             'm/z array':mz_array,
                                             'intensity array':intensity_array}
-    return 0
+    return processed_dict
+
+def unpack(in_dict):
+    import json
+    with open(in_dict) as f:
+        out_dict = json.load(f)
+
+    return out_dict
