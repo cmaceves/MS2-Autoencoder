@@ -5,10 +5,12 @@ start_time = time.time()
 
 file = 'cholesterol.mzxml'
 pair_dict_file = 'C:/Users/CCheny/OneDrive/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol/pair_dict.json'
+scan_dict_file = 'C:/Users/CCheny/OneDrive/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol/scan_dict.json'
 #directory = 'C:/Users/CCheny/Documents/UC San Diego/Bioinformatics/MS2-Autoencoder/Output/cholesterol' 
 directory = 'C:/Users/CCheny/OneDrive/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol'
 
 data = em.read_data(file)
+'''
 em.count_MS2(data)
 id_list_ms2 = em.find_MS2(data, directory)
 pair_dict = em.search_MS2_pairs(data, id_list_ms2)
@@ -19,3 +21,7 @@ processed_dict = em.get_pair_scans(data, pair_dict)
 print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
 em.output_search_dict(processed_dict, directory, scans=True)
 print('operations complete')
+'''
+scan_dict = em.unpack(scan_dict_file)
+simple_dict = em.find_max_min(scan_dict)
+em.output_search_dict(simple_dict, directory, simple=True)

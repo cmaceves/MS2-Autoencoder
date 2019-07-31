@@ -64,7 +64,7 @@ def list_retentionTime_MS2(data, id_list_ms2):
 
     return rt_list_ms2
 
-def search_MS2_pairs(data, id_list_ms2):
+def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
     """
     search for same molecules in MS2 scans
     same molecules are based on mass ('precursorMz') with a tolerance (mass_tolerance)
@@ -74,8 +74,8 @@ def search_MS2_pairs(data, id_list_ms2):
     """
     print('Beginning the search')
     pair_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
-    rt_tolerance = 0.5 #retentionTime tolerance for half a minute
-    mass_tolerance = 0.01 #mass tolerance for 0.01mZ
+    rt_tolerance = rt_tol #retentionTime tolerance for half a minute
+    mass_tolerance = mz_tol #mass tolerance for 0.01mZ
     intensity_tolerance_low = 2 #greater than 2x precursorIntensity from base molecule
     intensity_tolerance_up = 5 #less than 5x precursorIntensity from base molecule
 
@@ -110,7 +110,7 @@ def search_MS2_pairs(data, id_list_ms2):
     
     return pair_dict
 
-def output_search_dict(in_dict, directory, pair=None, scans=None):
+def output_search_dict(in_dict, directory, pair=None, scans=None, simple=None):
     """
     output the dictionary from search_MS2_pairs and/or get_pair_scans into files
     outputs .txt and .json
@@ -138,9 +138,34 @@ def output_search_dict(in_dict, directory, pair=None, scans=None):
         filename = directory + '/scan_dict.txt'
         with open(filename, 'w') as output:
             output.write(str(in_dict))
-        print('saved scan_dict to "scan_dict.txt"')        
+        print('saved scan_dict to "scan_dict.txt"')
+    elif simple == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/simple_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved scan_dict to "simple_dict.json"')
+
+        filename = directory + '/simple_dict.txt'
+        with open(filename, 'w') as output:
+            output.write(str(in_dict))
+        print('saved scan_dict to "simple_dict.txt"')
+    else:
+        json = json.dumps(in_dict)
+        filename = directory + '/output.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved scan_dict to "output.json"')
+
+        filename = directory + '/output.txt'
+        with open(filename, 'w') as output:
+            output.write(str(in_dict))
+        print('saved scan_dict to "output.txt"') 
 
 def get_pair_scans(data, pair_dict):
+    """
+    collect the information from the data for the matching molecules
+    """
     processed_dict = {}
     for key in pair_dict.keys():
         processed_dict[key] = []
@@ -158,11 +183,30 @@ def get_pair_scans(data, pair_dict):
                                             'precursorIntensity':intensity,
                                             'm/z array':mz_array,
                                             'intensity array':intensity_array}
+    
     return processed_dict
 
-def unpack(in_dict):
+def find_max_min(scan_dict):
+    """
+    find the maximum and minimum precursorIntensity scans for each molecule
+    """
+    simple_dict = {}
+    for mol in scan_dict.keys():
+        lst_dict = {}
+        for index in range(0, len(scan_dict[mol])):
+            for scan in scan_dict[mol][index].keys():
+                lst_dict[index] = scan_dict[mol][index][scan].get('precursorIntensity')
+        max_scan = [key for key, val in lst_dict.items() if val == max(lst_dict.values())]
+        min_scan = [key for key, val in lst_dict.items() if val == min(lst_dict.values())]
+        simple_dict[mol] = [scan_dict[mol][min_scan[0]], scan_dict[mol][max_scan[0]]]
+    return simple_dict
+
+def unpack(input_dict):
+    """
+    unpack a dictionary that has be save in a .json file
+    """
     import json
-    with open(in_dict) as f:
+    with open(input_dict) as f:
         out_dict = json.load(f)
 
     return out_dict
