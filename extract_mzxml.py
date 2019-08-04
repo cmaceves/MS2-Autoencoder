@@ -83,6 +83,7 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
         rt_save = float(data[k].get('retentionTime'))
         mass_save = float(data[k].get('precursorMz')[0].get('precursorMz'))
         intensity_save = float(data[k].get('precursorMz')[0].get('precursorIntensity'))
+        id_save = int(data[k].get('id'))
         v_list = []
         redun_check = False #initialize redundancy check boolean as not-redundant
 
@@ -101,8 +102,8 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
                         if intensity_dv <= intensity_save * intensity_tolerance_up and intensity_dv >= intensity_tolerance_low:
                             v_list.append(v)
                             print('Found a match: %s:%r' %(k, v))
-                pair_dict[k] = v_list
-            print(k, pair_dict[k])
+                pair_dict[id_save] = v_list
+            print(id_save, pair_dict[id_save])
             print('Finished search for dict[%s]' %k)
             redun_check = False #reset redundancy check boolean
         else:
@@ -196,9 +197,12 @@ def find_max_min(scan_dict):
         for index in range(0, len(scan_dict[mol])):
             for scan in scan_dict[mol][index].keys():
                 lst_dict[index] = scan_dict[mol][index][scan].get('precursorIntensity')
+                if scan == mol:
+                    self_scan = scan_dict[mol][index]
         max_scan = [key for key, val in lst_dict.items() if val == max(lst_dict.values())]
         min_scan = [key for key, val in lst_dict.items() if val == min(lst_dict.values())]
-        simple_dict[mol] = [scan_dict[mol][min_scan[0]], scan_dict[mol][max_scan[0]]]
+
+        simple_dict[mol] = [self_scan, scan_dict[mol][min_scan[0]], scan_dict[mol][max_scan[0]]] #[self, min, max]
     return simple_dict
 
 def unpack(input_dict):
