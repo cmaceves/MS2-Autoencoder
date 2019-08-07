@@ -1,4 +1,5 @@
 from pyteomics import mzxml, auxiliary
+import numpy as np
 
 def read_data(file):
     """
@@ -111,7 +112,7 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
     
     return pair_dict
 
-def output_search_dict(in_dict, directory, pair=None, scans=None, simple=None):
+def output_dict(in_dict, directory, pair=None, scans=None, simple=None):
     """
     output the dictionary from search_MS2_pairs and/or get_pair_scans into files
     outputs .txt and .json
@@ -166,6 +167,7 @@ def output_search_dict(in_dict, directory, pair=None, scans=None, simple=None):
 def get_pair_scans(data, pair_dict):
     """
     collect the information from the data for the matching molecules
+    hierarchical dictionary
     """
     processed_dict = {}
     for key in pair_dict.keys():
@@ -179,13 +181,36 @@ def get_pair_scans(data, pair_dict):
             intensity_array = data[index].get('intensity array').tolist()
             
             processed_dict[key].append({scan:{}})
-            processed_dict[key][i][scan] = {'retentionTime':rt,
-                                            'precursorMz':mz,
-                                            'precursorIntensity':intensity,
-                                            'm/z array':mz_array,
-                                            'intensity array':intensity_array}
+            processed_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
+                                            'precursorMz':mz, #precursorMz
+                                            'precursorIntensity':intensity, #precursorIntensity
+                                            'm/z array':mz_array, #m/z array
+                                            'intensity array':intensity_array} #intensity array
     
     return processed_dict
+
+def get_pair_scans2(data, pair_dict):
+    """
+    collect the information from the data for the matching molecules
+    hierarchical np.array
+    """
+    processed_list = []
+    for key in pair_dict.keys():
+        match_list = []
+        for index in pair_dict[key]:
+            scan = data[index].get('id')
+            rt = data[index].get('retentionTime')
+            intensity = data[index].get('precursorMz')[0].get('precursorIntensity')
+            mz = data[index].get('precursorMz')[0].get('precursorMz')
+            mz_array = data[index].get('m/z array')
+            intensity_array = data[index].get('intensity array')
+            
+            scan_array = np.array([(scan, rt, mz, intensity, mz_array, intensity_array)],
+                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), 
+                                    ('mz_array', float, mz_array.shape), ('intensity_array', float, intensity_array.shape)])
+            match_list.append(scan_array)
+        processed_list.append(np.array([key, match_list]))    
+    return processed_list
 
 def find_max_min(scan_dict):
     """
