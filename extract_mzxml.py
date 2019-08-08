@@ -112,58 +112,6 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
     
     return pair_dict
 
-def output_dict(in_dict, directory, pair=None, scans=None, simple=None):
-    """
-    output the dictionary from search_MS2_pairs and/or get_pair_scans into files
-    outputs .txt and .json
-    """
-    import json
-
-    if pair == True:
-        json = json.dumps(in_dict)
-        filename = directory + '/pair_dict.json'
-        with open(filename, 'w') as output:
-            output.write(json)
-        print('saved pair_dict to "pair_dict.json"')
-
-        filename = directory + '/pair_dict.txt'
-        with open(filename, 'w') as output:
-            output.write(str(in_dict))
-        print('saved pair_dict to "pair_dict.txt"')
-    elif scans == True:
-        json = json.dumps(in_dict)
-        filename = directory + '/scan_dict.json'
-        with open(filename, 'w') as output:
-            output.write(json)
-        print('saved scan_dict to "scan_dict.json"')
-
-        filename = directory + '/scan_dict.txt'
-        with open(filename, 'w') as output:
-            output.write(str(in_dict))
-        print('saved scan_dict to "scan_dict.txt"')
-    elif simple == True:
-        json = json.dumps(in_dict)
-        filename = directory + '/simple_dict.json'
-        with open(filename, 'w') as output:
-            output.write(json)
-        print('saved scan_dict to "simple_dict.json"')
-
-        filename = directory + '/simple_dict.txt'
-        with open(filename, 'w') as output:
-            output.write(str(in_dict))
-        print('saved scan_dict to "simple_dict.txt"')
-    else:
-        json = json.dumps(in_dict)
-        filename = directory + '/output.json'
-        with open(filename, 'w') as output:
-            output.write(json)
-        print('saved scan_dict to "output.json"')
-
-        filename = directory + '/output.txt'
-        with open(filename, 'w') as output:
-            output.write(str(in_dict))
-        print('saved scan_dict to "output.txt"') 
-
 def get_pair_scans(data, pair_dict):
     """
     collect the information from the data for the matching molecules
@@ -212,23 +160,99 @@ def get_pair_scans2(data, pair_dict):
         processed_list.append(np.array([key, match_list]))    
     return processed_list
 
-def find_max_min(scan_dict):
+def find_max_min(processed_dict):
     """
     find the maximum and minimum precursorIntensity scans for each molecule
+    input is a list
     """
     simple_dict = {}
-    for mol in scan_dict.keys():
+    for mol in processed_dict.keys():
         lst_dict = {}
-        for index in range(0, len(scan_dict[mol])):
-            for scan in scan_dict[mol][index].keys():
-                lst_dict[index] = scan_dict[mol][index][scan].get('precursorIntensity')
+        for index in range(0, len(processed_dict[mol])):
+            for scan in processed_dict[mol][index].keys():
+                lst_dict[index] = processed_dict[mol][index][scan].get('precursorIntensity')
                 if scan == mol:
-                    self_scan = scan_dict[mol][index]
+                    self_scan = processed_dict[mol][index]
         max_scan = [key for key, val in lst_dict.items() if val == max(lst_dict.values())]
         min_scan = [key for key, val in lst_dict.items() if val == min(lst_dict.values())]
 
-        simple_dict[mol] = [self_scan, scan_dict[mol][min_scan[0]], scan_dict[mol][max_scan[0]]] #[self, min, max]
+        simple_dict[mol] = [self_scan, processed_dict[mol][min_scan[0]], processed_dict[mol][max_scan[0]]] #[self, min, max]
     return simple_dict
+
+def convert_to_list(simple_dict):
+    """
+    converts simple_dict into a list of structured arrays
+    """
+    simple_list = []
+    for mol in simple_dict.keys():
+        match_list = []
+        for index in range(0, len(simple_dict[mol])):
+            for key in simple_dict[mol][index].keys():
+                scan = key
+                rt = simple_dict[mol][index][key].get('retentionTime')
+                intensity = simple_dict[mol][index][key].get('precursorIntensity')
+                mz = simple_dict[mol][index][key].get('precursorMz')
+                mz_array = np.array(simple_dict[mol][index][key].get('m/z array'))
+                intensity_array = np.array(simple_dict[mol][index][key].get('intensity array'))
+                
+                scan_array = np.array([(scan, rt, mz, intensity, mz_array, intensity_array)],
+                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), 
+                                        ('mz_array', float, mz_array.shape), ('intensity_array', float, intensity_array.shape)])
+                match_list.append(scan_array)
+        simple_list.append(np.array([mol, match_list]))
+    return simple_list
+
+def output_dict(in_dict, directory, pair=None, scans=None, simple=None):    
+    """
+    output the dictionary from search_MS2_pairs, get_pair_scans, find_max_min into files
+    outputs .txt and .json
+    """
+    import json
+
+    if pair == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/pair_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved pair_dict to "pair_dict.json"')
+
+    elif scans == True:
+        json = json.dumps(in_dict)
+        filename = directory + ' processed_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved processed_dict to  processed_dict.json"')
+
+    elif simple == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/simple_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved simple_dict to "simple_dict.json"')
+
+    else:
+        json = json.dumps(in_dict)
+        filename = directory + '/output.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved dict to "output.json"')
+
+def output_list(in_list, directory, scans=None, simple=None):
+    import numpy as np
+
+    if scans == True:
+        filename = directory + '/scan_list.txt'
+        np.savetxt(filename, in_list, fmt='%s')
+
+        filename = directory + '/scan_list.npy'
+        np.save(filename, in_list)
+
+    elif simple == True:
+        filename = directory + '/simple_list.txt'
+        np.savetxt(filename, in_list, fmt='%s')
+
+        filename = directory + '/simple_list.npy'
+        np.save(filename, in_list)
 
 def unpack(input_dict):
     """
