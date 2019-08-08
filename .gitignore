@@ -1,1 +1,6 @@
 *.mzXML
+*.bat
+*.zip
+*.code-workspace
+SpectrumFiltering-Desktop/
+SpectrumFiltering-Laptop/
