@@ -6,7 +6,7 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('data_file', help='data')
 parser.add_argument('directory', help='directory for output files')
-parser.add_argument('--pair_dict_file',
+parser.add_argument('--match_index_file',
                     action='store')
 parser.add_argument('--processed_dict_file',
                     action='store')
@@ -16,7 +16,7 @@ parser.add_argument('--simple_dict_file',
 args = parser.parse_args()
 file = args.data_file
 directory = args.directory
-pair_dict_file = args.pair_dict_file
+match_index_file = args.match_index_file
 processed_dict_file = args.processed_dict_file
 simple_dict_file = args.simple_dict_file
 
@@ -38,9 +38,9 @@ elif args.processed_dict_file: #tests the find_max_min() function
     em.output_dict(simple_dict, directory, simple=True)
     print('operations complete')
 
-elif args.pair_dict_file: #tests the get_pair_scans() function
-    pair_dict = em.unpack(pair_dict_file)
-    processed_dict = em.get_pair_scans(data, pair_dict)
+elif args.match_index_file: #tests the get_match_scans() function
+    match_index_dict = em.unpack(match_index_file)
+    processed_dict = em.get_match_scans(data, match_index_dict)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
     em.output_dict(processed_dict, directory, scans=True)
     print('operations complete')
@@ -48,11 +48,11 @@ elif args.pair_dict_file: #tests the get_pair_scans() function
 else: #complete run through
     em.count_MS2(data)
     id_list_ms2 = em.find_MS2(data, directory)
-    pair_dict = em.search_MS2_pairs(data, id_list_ms2)
+    match_index_dict = em.search_MS2_matches(data, id_list_ms2)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
-    em.output_dict(pair_dict, directory, pair=True)
+    em.output_dict(match_index_dict, directory, pair=True)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
-    processed_dict = em.get_pair_scans(data, pair_dict)
+    processed_dict = em.get_match_scans(data, match_index_dict)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
     em.output_dict(processed_dict, directory, scans=True)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))

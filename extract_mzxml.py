@@ -65,16 +65,16 @@ def list_retentionTime_MS2(data, id_list_ms2):
 
     return rt_list_ms2
 
-def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
+def search_MS2_matches(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
     """
     search for same molecules in MS2 scans
     same molecules are based on mass ('precursorMz') with a tolerance (mass_tolerance)
     same molecules are found within a bin of retentionTime (rt_tolerance)
-    generates a dictionary of scan indexes mapped to a list of matching scan indexes
+    generates a dictionary of scan IDs mapped to a list of matching scan indexes
     outputs a .txt and .json file for review
     """
     print('Beginning the search')
-    pair_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
+    match_index_dict = {} #key is integer from id_list_m2; value is list of integers from id_list_ms2
     rt_tolerance = rt_tol #retentionTime tolerance for half a minute
     mass_tolerance = mz_tol #mass tolerance for 0.01mZ
     intensity_tolerance_low = 2 #greater than 2x precursorIntensity from base molecule
@@ -88,7 +88,7 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
         v_list = []
         redun_check = False #initialize redundancy check boolean as not-redundant
 
-        for value in pair_dict.values():
+        for value in match_index_dict.values():
             for index in range(0, len(value)):
                 if k == value[index]:
                     redun_check = True              
@@ -103,25 +103,24 @@ def search_MS2_pairs(data, id_list_ms2, rt_tol=0.5, mz_tol=0.01):
                         if intensity_dv <= intensity_save * intensity_tolerance_up and intensity_dv >= intensity_tolerance_low:
                             v_list.append(v)
                             print('Found a match: %s:%r' %(k, v))
-                pair_dict[id_save] = v_list
-            print(id_save, pair_dict[id_save])
+                match_index_dict[id_save] = v_list
+            print(id_save, match_index_dict[id_save])
             print('Finished search for dict[%s]' %k)
             redun_check = False #reset redundancy check boolean
         else:
             redun_check = False #reset redundancy check boolean 
-    
-    return pair_dict
+    return match_index_dict
 
-def get_pair_scans(data, pair_dict):
+def get_match_scans(data, match_index_dict):
     """
     collect the information from the data for the matching molecules
     hierarchical dictionary
     """
     processed_dict = {}
-    for key in pair_dict.keys():
+    for key in match_index_dict.keys():
         processed_dict[key] = []
-        for index, i in zip(pair_dict[key], range(0, len(pair_dict[key]))):
-            scan = data[index].get('id')
+        for index, i in zip(match_index_dict[key], range(0, len(match_index_dict[key]))):
+            scan = int(data[index].get('id'))
             rt = data[index].get('retentionTime')
             intensity = data[index].get('precursorMz')[0].get('precursorIntensity')
             mz = data[index].get('precursorMz')[0].get('precursorMz')
@@ -132,33 +131,8 @@ def get_pair_scans(data, pair_dict):
             processed_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
                                             'precursorMz':mz, #precursorMz
                                             'precursorIntensity':intensity, #precursorIntensity
-                                            'm/z array':mz_array, #m/z array
-                                            'intensity array':intensity_array} #intensity array
-    
+                                            'mz_intensity array':zip(mz_array, intensity_array)} # zipped m/z array and intensity array
     return processed_dict
-
-def get_pair_scans2(data, pair_dict):
-    """
-    collect the information from the data for the matching molecules
-    hierarchical np.array
-    """
-    processed_list = []
-    for key in pair_dict.keys():
-        match_list = []
-        for index in pair_dict[key]:
-            scan = data[index].get('id')
-            rt = data[index].get('retentionTime')
-            intensity = data[index].get('precursorMz')[0].get('precursorIntensity')
-            mz = data[index].get('precursorMz')[0].get('precursorMz')
-            mz_array = data[index].get('m/z array')
-            intensity_array = data[index].get('intensity array')
-            
-            scan_array = np.array([(scan, rt, mz, intensity, mz_array, intensity_array)],
-                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), 
-                                    ('mz_array', float, mz_array.shape), ('intensity_array', float, intensity_array.shape)])
-            match_list.append(scan_array)
-        processed_list.append(np.array([key, match_list]))    
-    return processed_list
 
 def find_max_min(processed_dict):
     """
@@ -183,23 +157,36 @@ def convert_to_list(simple_dict):
     """
     converts simple_dict into a list of structured arrays
     """
-    simple_list = []
+    mol_list = []
+    pair_list = []
     for mol in simple_dict.keys():
+        self_list = []
         match_list = []
-        for index in range(0, len(simple_dict[mol])):
+        for key in simple_dict[mol][0].keys():
+            scan = key
+            rt = simple_dict[mol][0][key].get('retentionTime')
+            intensity = simple_dict[mol][0][key].get('precursorIntensity')
+            mz = simple_dict[mol][0][key].get('precursorMz')
+            mz_intensity_array = simple_dict[mol][0][key].get('mz_intensity_array')
+
+            self_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
+                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', float, mz_intensity_array.shape)])
+            self_list.append(self_array)
+
+        for index in range(1, len(simple_dict[mol])):
             for key in simple_dict[mol][index].keys():
                 scan = key
                 rt = simple_dict[mol][index][key].get('retentionTime')
                 intensity = simple_dict[mol][index][key].get('precursorIntensity')
                 mz = simple_dict[mol][index][key].get('precursorMz')
-                mz_array = np.array(simple_dict[mol][index][key].get('m/z array'))
-                intensity_array = np.array(simple_dict[mol][index][key].get('intensity array'))
+                mz_intensity_array = simple_dict[mol][index][key].get('mz_intensity_array')
                 
-                scan_array = np.array([(scan, rt, mz, intensity, mz_array, intensity_array)],
-                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), 
-                                        ('mz_array', float, mz_array.shape), ('intensity_array', float, intensity_array.shape)])
+                scan_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
+                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', float, mz_intensity_array.shape)])
                 match_list.append(scan_array)
-        simple_list.append(np.array([mol, match_list]))
+        mol_list.append(self_list)
+        pair_list.append(match_list)
+        simple_list = [mol_list, pair_list]
     return simple_list
 
 def output_dict(in_dict, directory, pair=None, scans=None, simple=None):    
@@ -214,21 +201,21 @@ def output_dict(in_dict, directory, pair=None, scans=None, simple=None):
         filename = directory + '/pair_dict.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved pair_dict to "pair_dict.json"')
+        print('saved pair_dict to %s' %filename)
 
     elif scans == True:
         json = json.dumps(in_dict)
-        filename = directory + ' processed_dict.json'
+        filename = directory + '/processed_dict.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved processed_dict to  processed_dict.json"')
+        print('saved processed_dict to %s' %filename)
 
     elif simple == True:
         json = json.dumps(in_dict)
         filename = directory + '/simple_dict.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved simple_dict to "simple_dict.json"')
+        print('saved simple_dict to %s' %filename)
 
     else:
         json = json.dumps(in_dict)
@@ -248,9 +235,10 @@ def output_list(in_list, directory, scans=None, simple=None):
         np.save(filename, in_list)
 
     elif simple == True:
+        '''
         filename = directory + '/simple_list.txt'
         np.savetxt(filename, in_list, fmt='%s')
-
+        '''
         filename = directory + '/simple_list.npy'
         np.save(filename, in_list)
 
@@ -261,5 +249,4 @@ def unpack(input_dict):
     import json
     with open(input_dict) as f:
         out_dict = json.load(f)
-
     return out_dict

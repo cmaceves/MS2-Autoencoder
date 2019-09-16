@@ -4,3 +4,7 @@
 *.code-workspace
 SpectrumFiltering-Desktop/
 SpectrumFiltering-Laptop/
+Archive/
+.ipynb_checkpoints/
+.vscode/
+stash/
