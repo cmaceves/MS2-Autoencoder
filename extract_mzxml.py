@@ -118,7 +118,7 @@ def get_match_scans(data, match_index_dict):
     """
     processed_dict = {}
     for key in match_index_dict.keys():
-        processed_dict[key] = []
+        processed_dict[int(key)] = []
         for index, i in zip(match_index_dict[key], range(0, len(match_index_dict[key]))):
             scan = int(data[index].get('id'))
             rt = data[index].get('retentionTime')
@@ -127,30 +127,72 @@ def get_match_scans(data, match_index_dict):
             mz_array = data[index].get('m/z array').tolist()
             intensity_array = data[index].get('intensity array').tolist()
             
-            processed_dict[key].append({scan:{}})
-            processed_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
-                                            'precursorMz':mz, #precursorMz
-                                            'precursorIntensity':intensity, #precursorIntensity
-                                            'mz_intensity array':zip(mz_array, intensity_array)} # zipped m/z array and intensity array
+            processed_dict[int(key)].append({scan:{}})
+            processed_dict[int(key)][i][scan] = {'retentionTime':rt, #retentionTime
+                                                'precursorMz':mz, #precursorMz
+                                                'precursorIntensity':intensity, #precursorIntensity
+                                                'mz array':mz_array, #mz array 
+                                                'intensity array':intensity_array} #intensity array
     return processed_dict
 
-def find_max_min(processed_dict):
+def bin_array(processed_dict):
     """
-    find the maximum and minimum precursorIntensity scans for each molecule
-    input is a list
+    bin and zip mz array and intensity array
+    mz values are binned
+    intensity values are summed within the bin
+    returns dictionary with binned and zipped array
+    """
+    from scipy.stats import binned_statistic
+
+    binned_dict = {}
+    for key in processed_dict.keys():
+        binned_dict[key] = []
+        for i in range(0, len(processed_dict[key])):
+            for scan in processed_dict[key][i]:
+                mz_array = processed_dict[key][i][scan].get('mz array')
+                intensity_array = processed_dict[key][i][scan].get('intensity array')
+                binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=range(0, 2000)) #bins are integers range(0,2000)
+                
+
+                rt = processed_dict[key][i][scan].get('retentionTime')
+                mz = processed_dict[key][i][scan].get('precursorMz')
+                intensity = processed_dict[key][i][scan].get('precursorIntensity')
+                mz_intensity_array = list(zip(binned_mz, binned_intensity)) #zip binned mz array and binned intensity array
+
+                binned_dict[key].append({scan:{}})
+                binned_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
+                                            'precursorMz':mz, #precursorMz
+                                            'precursorIntensity':intensity, #precursorIntensity
+                                            'mz_intensity array':mz_intensity_array} #intensity array
+    return binned_dict
+
+def create_pairs(binned_dict):
+    """
+    creates pairs of scans from dict of matched scans
+    number of pairs per same molecule is n(n+1)/2 where n is number of scans
+    returns dictionary with paired scans
+    """
+    pairs_dict = {}
+    return pairs_dict
+
+def find_max_min(pairs_dict):
+    """
+    find the maximum and minimum precursorIntensity scans for each pair
+    rearrange pair according to minimum scan then maximum scan
+    input is a dict
     """
     simple_dict = {}
-    for mol in processed_dict.keys():
+    for mol in pairs_dict.keys():
         lst_dict = {}
-        for index in range(0, len(processed_dict[mol])):
-            for scan in processed_dict[mol][index].keys():
-                lst_dict[index] = processed_dict[mol][index][scan].get('precursorIntensity')
+        for index in range(0, len(pairs_dict[mol])):
+            for scan in pairs_dict[mol][index].keys():
+                lst_dict[index] = pairs_dict[mol][index][scan].get('precursorIntensity')
                 if scan == mol:
-                    self_scan = processed_dict[mol][index]
+                    self_scan = pairs_dict[mol][index]
         max_scan = [key for key, val in lst_dict.items() if val == max(lst_dict.values())]
         min_scan = [key for key, val in lst_dict.items() if val == min(lst_dict.values())]
 
-        simple_dict[mol] = [self_scan, processed_dict[mol][min_scan[0]], processed_dict[mol][max_scan[0]]] #[self, min, max]
+        simple_dict[mol] = [self_scan, pairs_dict[mol][min_scan[0]], pairs_dict[mol][max_scan[0]]] #[self, min, max]
     return simple_dict
 
 def convert_to_list(simple_dict):
@@ -170,7 +212,7 @@ def convert_to_list(simple_dict):
             mz_intensity_array = simple_dict[mol][0][key].get('mz_intensity_array')
 
             self_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
-                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', float, mz_intensity_array.shape)])
+                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array))])
             self_list.append(self_array)
 
         for index in range(1, len(simple_dict[mol])):
@@ -182,7 +224,7 @@ def convert_to_list(simple_dict):
                 mz_intensity_array = simple_dict[mol][index][key].get('mz_intensity_array')
                 
                 scan_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
-                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', float, mz_intensity_array.shape)])
+                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array.shape))])
                 match_list.append(scan_array)
         mol_list.append(self_list)
         pair_list.append(match_list)
