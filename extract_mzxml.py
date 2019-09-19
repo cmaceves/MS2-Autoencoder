@@ -151,7 +151,7 @@ def bin_array(processed_dict):
             for scan in processed_dict[key][i]:
                 mz_array = processed_dict[key][i][scan].get('mz array')
                 intensity_array = processed_dict[key][i][scan].get('intensity array')
-                binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=range(0, 2000)) #bins are integers range(0,2000)
+                binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
                 
 
                 rt = processed_dict[key][i][scan].get('retentionTime')
@@ -173,6 +173,10 @@ def create_pairs(binned_dict):
     returns dictionary with paired scans
     """
     pairs_dict = {}
+    for key in binned_dict.keys():
+        for index in range(0, len(binned_dict.get(key))):
+            for scans in binned_dict[mol][index].keys():
+                print('nothing')
     return pairs_dict
 
 def find_max_min(pairs_dict):
@@ -231,33 +235,40 @@ def convert_to_list(simple_dict):
         simple_list = [mol_list, pair_list]
     return simple_list
 
-def output_dict(in_dict, directory, pair=None, scans=None, simple=None):    
+def output_dict(in_dict, directory, match_index=None, processed=None, binned=None, pairs=None):    
     """
-    output the dictionary from search_MS2_pairs, get_pair_scans, find_max_min into files
+    output the dictionary from search_MS2_matches, get_match_scans, bin_array, create_pairs, find_max_min into files
     outputs .txt and .json
     """
     import json
 
-    if pair == True:
+    if match_index == True:
         json = json.dumps(in_dict)
-        filename = directory + '/pair_dict.json'
+        filename = directory + '/match_index.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved pair_dict to %s' %filename)
+        print('saved match_index_dict to %s' %filename)
 
-    elif scans == True:
+    elif processed == True:
         json = json.dumps(in_dict)
         filename = directory + '/processed_dict.json'
         with open(filename, 'w') as output:
             output.write(json)
         print('saved processed_dict to %s' %filename)
 
-    elif simple == True:
+    elif binned == True:
         json = json.dumps(in_dict)
-        filename = directory + '/simple_dict.json'
+        filename = directory + '/binned_dict.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved simple_dict to %s' %filename)
+        print('saved binned_dict to %s' %filename)
+    
+    elif pairs == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/pairs_dict.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved pairs_dict to %s' %filename)
 
     else:
         json = json.dumps(in_dict)
