@@ -31,9 +31,9 @@ if args.binned_dict_file: # tests the create_pairs() function
 
 elif args.processed_dict_file: #tests the bin_array() function
     processed_dict = em.unpack(processed_dict_file)
-    binned_dict = em.bin_array(processed_dict)
+    binned_list = em.bin_array2(processed_dict)
     print('--- %s seconds runtime --- ' %(str(time.time() - start_time)))
-    em.output_dict(binned_dict, directory, binned=True)
+    em.output_dict(binned_list, directory, binned=True)
     print('operations complete')
 
 elif args.match_index_file: #tests the get_match_scans() function

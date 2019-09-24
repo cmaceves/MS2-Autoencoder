@@ -166,18 +166,53 @@ def bin_array(processed_dict):
                                             'mz_intensity array':mz_intensity_array} #intensity array
     return binned_dict
 
+def bin_array2(processed_dict):
+    """
+    bin and zip mz array and intensity array
+    mz values are binned
+    intensity values are summed within the bin
+    returns list with binned and zipped array
+    """
+    from scipy.stats import binned_statistic
+
+    binned_list = []
+    for key in processed_dict.keys():
+        scan_list = []
+        for i in range(0, len(processed_dict[key])):
+            for scan in processed_dict[key][i]:
+                mz_array = processed_dict[key][i][scan].get('mz array')
+                intensity_array = processed_dict[key][i][scan].get('intensity array')
+                binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
+                
+
+                rt = processed_dict[key][i][scan].get('retentionTime')
+                mz = processed_dict[key][i][scan].get('precursorMz')
+                intensity = processed_dict[key][i][scan].get('precursorIntensity')
+                mz_intensity_array = list(zip(binned_mz, binned_intensity)) #zip binned mz array and binned intensity array
+
+                scan_list.append({scan:{'retentionTime':rt, #retentionTime
+                                        'precursorMz':mz, #precursorMz
+                                        'precursorIntensity':intensity, #precursorIntensity
+                                        'mz_intensity array':mz_intensity_array}}) #intensity array
+        binned_list.append(scan_list)
+    return binned_list
+
 def create_pairs(binned_dict):
     """
     creates pairs of scans from dict of matched scans
     number of pairs per same molecule is n(n+1)/2 where n is number of scans
-    returns dictionary with paired scans
+    returns list with paired scans
     """
-    pairs_dict = {}
+    pairs_list = []
     for key in binned_dict.keys():
-        for index in range(0, len(binned_dict.get(key))):
-            for scans in binned_dict[mol][index].keys():
-                print('nothing')
-    return pairs_dict
+        pairs = []
+        for i in range(0, len(binned_dict[key])):
+            for j in range(i+1, len(binned_dict[key])):
+                for scan, scan2 in zip(binned_dict[key][i].keys(), binned_dict[key][j].keys()):
+                    pairs.append([binned_dict[key][i][scan], binned_dict[key][j][scan2]])
+                    print(scan, scan2)
+        pairs_list.append(pairs)
+    return pairs_list
 
 def find_max_min(pairs_dict):
     """
@@ -258,17 +293,17 @@ def output_dict(in_dict, directory, match_index=None, processed=None, binned=Non
 
     elif binned == True:
         json = json.dumps(in_dict)
-        filename = directory + '/binned_dict.json'
+        filename = directory + '/binned_list.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved binned_dict to %s' %filename)
+        print('saved binned_list to %s' %filename)
     
     elif pairs == True:
         json = json.dumps(in_dict)
-        filename = directory + '/pairs_dict.json'
+        filename = directory + '/pairs_list.json'
         with open(filename, 'w') as output:
             output.write(json)
-        print('saved pairs_dict to %s' %filename)
+        print('saved pairs_list to %s' %filename)
 
     else:
         json = json.dumps(in_dict)
