@@ -152,13 +152,13 @@ def bin_array(processed_dict):
                 mz_array = processed_dict[key][i][scan].get('mz array')
                 intensity_array = processed_dict[key][i][scan].get('intensity array')
                 binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
-                
+                binned_mz = binned_mz[:-1]
 
                 rt = processed_dict[key][i][scan].get('retentionTime')
                 mz = processed_dict[key][i][scan].get('precursorMz')
                 intensity = processed_dict[key][i][scan].get('precursorIntensity')
-                mz_intensity_array = list(zip(binned_mz, binned_intensity)) #zip binned mz array and binned intensity array
-
+                #mz_intensity_array = np.dstack((binned_mz, binned_intensity)).reshape(len(binned_mz), 2) #zip binned mz array and binned intensity array
+                mz_intensity_array = list(zip(binned_mz, binned_intensity))
                 binned_dict[key].append({scan:{}})
                 binned_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
                                             'precursorMz':mz, #precursorMz
@@ -206,43 +206,30 @@ def arrange_min_max(pairs_list):
     print('length of ordered list %s should be the same as length of pairs list %d' % (len_ordered, len_pairs))
     return ordered_list
 
-def convert_to_list(simple_dict):
+def convert_to_ready(ordered_list):
     """
-    converts simple_dict into a list of structured arrays
+    converts ordered_list into a list of structured arrays
+    without dictionary keys
+    conversion makes list ready as trianing input
     """
-    mol_list = []
-    pair_list = []
-    for mol in simple_dict.keys():
-        self_list = []
-        match_list = []
-        for key in simple_dict[mol][0].keys():
-            scan = key
-            rt = simple_dict[mol][0][key].get('retentionTime')
-            intensity = simple_dict[mol][0][key].get('precursorIntensity')
-            mz = simple_dict[mol][0][key].get('precursorMz')
-            mz_intensity_array = simple_dict[mol][0][key].get('mz_intensity_array')
+    ready_list = []
+    for i in range(0, len(ordered_list)): #i is at the group/molecule level
+        group = []
+        for j in range(0, len(ordered_list[i])): #j is at the pairs per molecule level
+            pairs = []
+            for k in range(0 , len(ordered_list[i][j])): #k is at the scan per pair level
+                rt = ordered_list[i][j][k].get('retentionTime')
+                intensity = ordered_list[i][j][k].get('precursorIntensity')
+                mz = ordered_list[i][j][k].get('precursorMz')
+                mz_intensity_array = np.asarray(ordered_list[i][j][k].get('mz_intensity array'))
+                pairs.append(np.asarray([rt, intensity, mz, mz_intensity_array]))
+                #pairs.append(np.array([(rt, intensity, mz, mz_intensity_array)], dtype=[('rt', 'f8'), ('intensity', 'f8'), ('mz', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array))]))
+            group.append(np.asarray(pairs))
+        ready_list.append(np.asarray(group))
+        ready_array = np.asarray(ready_list)
+    return ready_array
 
-            self_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
-                                    dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array))])
-            self_list.append(self_array)
-
-        for index in range(1, len(simple_dict[mol])):
-            for key in simple_dict[mol][index].keys():
-                scan = key
-                rt = simple_dict[mol][index][key].get('retentionTime')
-                intensity = simple_dict[mol][index][key].get('precursorIntensity')
-                mz = simple_dict[mol][index][key].get('precursorMz')
-                mz_intensity_array = simple_dict[mol][index][key].get('mz_intensity_array')
-                
-                scan_array = np.array([(scan, rt, mz, intensity, mz_intensity_array)],
-                                        dtype=[('id', 'S10'), ('rt', 'f8'), ('mz', 'f8'), ('intensity', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array.shape))])
-                match_list.append(scan_array)
-        mol_list.append(self_list)
-        pair_list.append(match_list)
-        simple_list = [mol_list, pair_list]
-    return simple_list
-
-def output_dict(in_dict, directory, match_index=None, processed=None, binned=None, pairs=None, ordered=None):    
+def output_file(in_dict, directory, match_index=None, processed=None, binned=None, pairs=None, ordered=None):    
     """
     output the dictionary from search_MS2_matches, get_match_scans, bin_array, create_pairs, find_max_min into files
     outputs .txt and .json
@@ -291,23 +278,14 @@ def output_dict(in_dict, directory, match_index=None, processed=None, binned=Non
             output.write(json)
         print('saved dict to "output.json"')
 
-def output_list(in_list, directory, scans=None, simple=None):
+def output_list(in_list, directory):
     import numpy as np
 
-    if scans == True:
-        filename = directory + '/scan_list.txt'
-        np.savetxt(filename, in_list, fmt='%s')
+    filename = directory + '/ready_array.txt'
+    np.savetxt(filename, in_list, fmt='%s')
 
-        filename = directory + '/scan_list.npy'
-        np.save(filename, in_list)
-
-    elif simple == True:
-        '''
-        filename = directory + '/simple_list.txt'
-        np.savetxt(filename, in_list, fmt='%s')
-        '''
-        filename = directory + '/simple_list.npy'
-        np.save(filename, in_list)
+    filename = directory + '/ready_array.npy'
+    np.save(filename, in_list)
 
 def unpack(input_dict):
     """
