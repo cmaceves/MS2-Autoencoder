@@ -135,6 +135,7 @@ def get_match_scans(data, match_index_dict):
                                                 'intensity array':intensity_array} #intensity array
     return processed_dict
 
+#use bin_array() for vecortizing and outputting zipped list of mz and intensity
 def bin_array(processed_dict):
     """
     bin and zip mz array and intensity array
@@ -151,20 +152,52 @@ def bin_array(processed_dict):
             for scan in processed_dict[key][i]:
                 mz_array = processed_dict[key][i][scan].get('mz array')
                 intensity_array = processed_dict[key][i][scan].get('intensity array')
-                binned_intensity, binned_mz, bin_index = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
+                binned_intensity, binned_mz, _ = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
                 binned_mz = binned_mz[:-1]
 
                 rt = processed_dict[key][i][scan].get('retentionTime')
                 mz = processed_dict[key][i][scan].get('precursorMz')
                 intensity = processed_dict[key][i][scan].get('precursorIntensity')
                 #mz_intensity_array = np.dstack((binned_mz, binned_intensity)).reshape(len(binned_mz), 2) #zip binned mz array and binned intensity array
-                mz_intensity_array = list(zip(binned_mz, binned_intensity))
+                mz_intensity_array = zip(binned_mz, binned_intensity)
                 binned_dict[key].append({scan:{}})
                 binned_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
                                             'precursorMz':mz, #precursorMz
                                             'precursorIntensity':intensity, #precursorIntensity
                                             'mz_intensity array':mz_intensity_array} #intensity array
     print('successfully binned all mz array and intensity array')
+    return binned_dict
+
+#use bin_array2() for vectorizing and outputting only the intensity array
+def bin_array2(processed_dict):
+    """
+    bin intensity array
+    mz values are binned
+    intensity values are summed within the bin
+    returns dictionary with binned intensity array
+    """
+    from scipy.stats import binned_statistic
+
+    binned_dict = {}
+    for key in processed_dict.keys():
+        binned_dict[key] = []
+        for i in range(0, len(processed_dict[key])):
+            for scan in processed_dict[key][i]:
+                mz_array = processed_dict[key][i][scan].get('mz array')
+                intensity_array = processed_dict[key][i][scan].get('intensity array')
+                binned_intensity, binned_mz, _ = binned_statistic(mz_array, intensity_array, statistic='sum', bins=2000, range=(0, 2000)) #bins are integers range(0,2000)
+                binned_mz = binned_mz[:-1]
+
+                rt = processed_dict[key][i][scan].get('retentionTime')
+                mz = processed_dict[key][i][scan].get('precursorMz')
+                intensity = processed_dict[key][i][scan].get('precursorIntensity')
+                intensity_array = binned_intensity.tolist()
+                binned_dict[key].append({scan:{}})
+                binned_dict[key][i][scan] = {'retentionTime':rt, #retentionTime
+                                            'precursorMz':mz, #precursorMz
+                                            'precursorIntensity':intensity, #precursorIntensity
+                                            'intensity array':intensity_array} #intensity array
+    print('successfully binned all intensity array')
     return binned_dict
 
 def create_pairs(binned_dict):
@@ -206,11 +239,12 @@ def arrange_min_max(pairs_list):
     print('length of ordered list %s should be the same as length of pairs list %d' % (len_ordered, len_pairs))
     return ordered_list
 
+#use convert_to_ready() for creating an all inclusive file
 def convert_to_ready(ordered_list):
     """
     converts ordered_list into a list of structured arrays
     without dictionary keys
-    conversion makes list ready as trianing input
+    conversion creates a list with all useful information
     """
     ready_list = []
     for i in range(0, len(ordered_list)): #i is at the group/molecule level
@@ -223,16 +257,34 @@ def convert_to_ready(ordered_list):
                 mz = ordered_list[i][j][k].get('precursorMz')
                 mz_intensity_array = np.asarray(ordered_list[i][j][k].get('mz_intensity array'))
                 pairs.append(np.asarray([rt, intensity, mz, mz_intensity_array]))
-                #pairs.append(np.array([(rt, intensity, mz, mz_intensity_array)], dtype=[('rt', 'f8'), ('intensity', 'f8'), ('mz', 'f8'), ('mz_intensity_array', zip, len(mz_intensity_array))]))
             group.append(np.asarray(pairs))
         ready_list.append(np.asarray(group))
         ready_array = np.asarray(ready_list)
     return ready_array
 
+#use convert_to_ready2() for creating a training ready file
+def convert_to_ready2(ordered_list):
+    """
+    converts ordered_list into a list of structured arrays
+    without dictionary keys
+    renders only the mz_intensity array 
+    conversion makes list ready as training input
+    """
+    ready_list = []
+    for i in range(0, len(ordered_list)): #i is at the group/molecule level
+        for j in range(0, len(ordered_list[i])): #j is at the pairs per molecule level
+            pairs = []
+            for k in range(0 , len(ordered_list[i][j])): #k is at the scan per pair level
+                intensity_array = ordered_list[i][j][k].get('intensity array')
+                pairs.append(np.asarray(intensity_array))
+            ready_list.append(np.asarray(pairs))
+        ready_array = np.asarray(ready_list)
+    return ready_array
+
 def output_file(in_dict, directory, match_index=None, processed=None, binned=None, pairs=None, ordered=None):    
     """
-    output the dictionary from search_MS2_matches, get_match_scans, bin_array, create_pairs, find_max_min into files
-    outputs .txt and .json
+    output the dictionary from search_MS2_matches, get_match_scans, bin_array, create_pairs, arrange_min_max into files
+    outputs .json
     """
     import json
 
@@ -278,14 +330,53 @@ def output_file(in_dict, directory, match_index=None, processed=None, binned=Non
             output.write(json)
         print('saved dict to "output.json"')
 
-def output_list(in_list, directory):
+def output_file2(in_dict, directory, binned=None, pairs=None, ordered=None):    
+    """
+    output the dictionary from bin_array2, create_pairs, arrange_min_max into files
+    outputs .json
+    """
+    import json
+
+    if binned == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/binned_dict2.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved binned_dict to %s' %filename)
+    
+    elif pairs == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/pairs_list2.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved pairs_list to %s' %filename)
+    
+    elif ordered == True:
+        json = json.dumps(in_dict)
+        filename = directory + '/ordered_list2.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved ordered_list to %s' %filename)
+
+    else:
+        json = json.dumps(in_dict)
+        filename = directory + '/output.json'
+        with open(filename, 'w') as output:
+            output.write(json)
+        print('saved dict to "output.json"')
+
+def output_list(in_list, directory, two=None):
     import numpy as np
 
-    filename = directory + '/ready_array.txt'
-    np.savetxt(filename, in_list, fmt='%s')
-
-    filename = directory + '/ready_array.npy'
-    np.save(filename, in_list)
+    if two == True:
+        filename = directory + '/ready_array2.npz'
+        np.savez_compressed(filename, in_list)
+        print('saved ready_array2 to %s' %filename)
+    
+    else:
+        filename = directory + '/ready_array.npz'
+        np.savez_compressed(filename, in_list)
+        print('saved ready_array to %s' %filename)
 
 def unpack(input_dict):
     """

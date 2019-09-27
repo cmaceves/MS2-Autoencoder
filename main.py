@@ -25,25 +25,25 @@ start_time = time.time()
 
 data = em.read_data(file)
 
-if args.ordered_list_file: #test the convert_to_ready() function
+if args.ordered_list_file: #test the convert_to_ready2() function
     ordered_list = em.unpack(ordered_list_file)
-    ready_array = em.convert_to_ready(ordered_list)
-    em.output_list(ready_array, directory)
+    ready_array = em.convert_to_ready2(ordered_list)
+    em.output_list(ready_array, directory, two=True)
 
 elif args.pairs_list_file: #test the arrange_min_max() function
     pairs_list = em.unpack(pairs_list_file)
     ordered_list = em.arrange_min_max(pairs_list)
-    em.output_file(ordered_list, directory, ordered=True)
+    em.output_file2(ordered_list, directory, ordered=True)
 
 elif args.binned_dict_file: #tests the create_pairs() function
     binned_dict = em.unpack(binned_dict_file)
     pairs_list = em.create_pairs(binned_dict)
-    em.output_file(pairs_list, directory, pairs=True)
+    em.output_file2(pairs_list, directory, pairs=True)
 
-elif args.processed_dict_file: #tests the bin_array() function
+elif args.processed_dict_file: #tests the bin_array2() function
     processed_dict = em.unpack(processed_dict_file)
-    binned_dict = em.bin_array(processed_dict)
-    em.output_file(binned_dict, directory, binned=True)
+    binned_dict = em.bin_array2(processed_dict)
+    em.output_file2(binned_dict, directory, binned=True)
 
 elif args.match_index_file: #tests the get_match_scans() function
     match_index_dict = em.unpack(match_index_file)
@@ -56,22 +56,37 @@ else: #complete run through
     id_list_ms2 = em.find_MS2(data, directory)
     match_index_dict = em.search_MS2_matches(data, id_list_ms2)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
+    current_time = time.time()
     em.output_file(match_index_dict, directory, match_index=True)
     
     processed_dict = em.get_match_scans(data, match_index_dict)
-    print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
+    print('--- %s seconds runtime ---' %(str(time.time() - current_time)))
+    current_time = time.time()
     em.output_file(processed_dict, directory, processed=True)
     
-    binned_dict = em.bin_array(processed_dict)
-    print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
-    em.output_file(binned_dict, directory, binned=True)
+    #binned_dict = em.bin_array(processed_dict)
+    binned_dict = em.bin_array2(processed_dict)
+    print('--- %s seconds runtime ---' %(str(time.time() - current_time)))
+    current_time = time.time()
+    #em.output_file(binned_dict, directory, binned=True)
+    em.output_file2(binned_dict, directory, binned=True)
     
     pairs_list = em.create_pairs(binned_dict)
-    print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
-    em.output_file(pairs_list, directory, pairs=True)
+    print('--- %s seconds runtime ---' %(str(time.time() - current_time)))
+    current_time = time.time()
+    #em.output_file(pairs_list, directory, pairs=True)
+    em.output_file2(pairs_list, directory, pairs=True)
     
     ordered_list = em.arrange_min_max(pairs_list)
-    print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
-    em.output_file(ordered_list, directory, ordered=True)
+    print('--- %s seconds runtime ---' %(str(time.time() - current_time)))
+    current_time = time.time()
+    #em.output_file(ordered_list, directory, ordered=True)
+    em.output_file2(ordered_list, directory, ordered=True)
+
+    #ready_array = em.convert_to_ready(ordered_list)
+    ready_array = em.convert_to_ready2(ordered_list)
+    print('--- %s seconds runtime ---' %(str(time.time() - current_time)))
+    current_time = time.time()
+    em.output_list(ready_array, directory, two=True)
 
 print('operations complete')

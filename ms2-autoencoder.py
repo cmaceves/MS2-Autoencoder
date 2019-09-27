@@ -6,53 +6,53 @@ import numpy as np
 import tensorflow as tf
 
 import extract_mzxml as em
-
 #%%
-simple_list_file = 'C:/Users/CCheny/Documents/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol/simple_list.npy'
-simple_list = np.load(simple_list_file, allow_pickle=True)
-
-X_train = simple_list[1] #features
-y_train = simple_list[0] #labels
-
+data_file = 'C:/Users/CCheny/Documents/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol/ready_array2.npz'
+file = np.load(data_file, allow_pickle=True)
+data = file['arr_0']
 #%%
-num_inputs = 
-num_hid1 = 
-num_hid2 = 
-num_hid3 = 
-num_output = num_inputs
-learning_rate = 0.01
-activation_function = tf.nn.relu 
+normalize = np.amax(data) #for normalizing data
+np.random.shuffle(data) #randomize data list
+new_list = np.split(data, 2, axis=1) #split data into low peaks and high peaks
 
+low_peaks = new_list[0]
+low_peaks = low_peaks.astype('float32') / normalize #normalize by dividing all values by the max value
+
+high_peaks = new_list[1]
+high_peaks = high_peaks.astype('float32') / normalize #normalize by dividing all values by the max value
 #%%
-X = tf.placeholder(tf.float64)
-initializer = tf.variance_scaling_initializer()
+X = low_peaks
+y = high_peaks
 
-w1 = tf.Variable(initializer([num_inputs, num_hid1]), dtype = tf.float64)
-w2 = tf.Variable(initializer([num_hid1, num_hid2]), dtype = tf.float64)
-w3 = tf.Variable(initializer([num_hid2, num_hid3]), dtype=tf.float64)
-w4 = tf.Variable(initializer([num_hid3, num_output]), dtype=tf.float64)
+Xsplit = int(0.8*len(X))
+X_train = X[:Xsplit, :, :] #80% of the low peaks data
+X_test = X[Xsplit:, :, :] #20% of the high peaks data
+X_train = X_train.reshape(len(X_train), np.prod(X_train.shape[1:])) #reshape to 2D
+X_test = X_test.reshape(len(X_test), np.prod(X_test.shape[1:])) #reshape to 2D
 
-b1 = tf.Variable(tf.zeros(num_hid1))
-b2 = tf.Variable(tf.zeros(num_hid2))
-b3 = tf.Variable(tf.zeros(num_hid3))
-b4 = tf.Variable(tf.zeros(num_output))
-
-hid_layer1 = activation_function(tf.matmul(X, w1) + b1)
-hid_layer2 = activation_function(tf.matmul(hid_layer1, w2) + b2)
-hid_layer3 = activation_function(tf.matmul(hid_layer2, w3) + b3)
-output_layer = activation_function(tf.matmul(hid_layer3, w4) + b4)
-
+ysplit = int(0.8*len(y))
+y_train = y[:ysplit, :, :] #80% of the high peaks data
+y_test = y[ysplit:, :, :] #20% of the high peaks data
+y_train = y_train.reshape(len(y_train), np.prod(y_train.shape[1:])) #reshape to 2D
+y_test = y_test.reshape(len(y_test), np.prod(y_test.shape[1:])) #reshape to 2D
 #%%
-loss = tf.reduce_mean(tf.square(output_layer - X))
-optimizer = tf.train.AdamOptimizer(learning_rate)
-train = optimizer.minimize(loss)
+encoding_dim = 100
+input_scan = Input(shape=(2000,))
+encoded = Dense(encoding_dim, activation='relu')(input_scan)
+decoded = Dense(2000, activation='sigmoid')(encoded)
 
-init = tf.global_variables_initializer()
+autoencoder = Model(input_scan, decoded)
+encoder = Model(input_scan, encoded)
 
-num_epoch = 5
-batch_size = 
-
-with tf.Session() as sess:
-    sess.run(init)
-    for epoch in range(num_epoch):
-        
+encoded_input = Input(shape=(encoding_dim,))
+decoder_layer = autoencoder.layers[-1]
+decoder = Model(encoded_input, decoder_layer(encoded_input))
+#%%
+autoencoder.compile(optimizer='adadelta', loss='poisson')
+autoencoder.fit(X_train, y_train,
+                epochs=50,
+                bathc_size=10,
+                validation_data=(X_test, y_test))
+#%%
+encoded_scans = encoder.predict(X_test)
+decoded_scans = decoder.predict(encoded_scans)
