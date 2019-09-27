@@ -5,4 +5,4 @@ test_workflow:
 	nextflow run extract_data.nf -resume
 
 test_cluster:
-	nextflow run extract_data.nf -c cluster.config --input_filelist ./test_data/redu.filelist --SIRIUSMODULES="" -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084286/ccms_peak/GNPS00001/*" -resume
