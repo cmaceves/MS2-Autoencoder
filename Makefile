@@ -6,3 +6,6 @@ test_workflow:
 
 test_cluster:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084286/ccms_peak/GNPS00001/*" -resume
+
+test_cluster_MSV000083825:
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/**.mzML" -resume
