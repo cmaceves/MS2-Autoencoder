@@ -4,9 +4,6 @@ from keras.models import Model
 import numpy as np
 import tensorflow as tf
 
-import extract_mzxml as em
-
-
 data_file = 'concated_data.npz'
 file = np.load(data_file, allow_pickle=True)
 data = file['arr_0']
