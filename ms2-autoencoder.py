@@ -1,4 +1,3 @@
-#%%
 from keras.layers import Input, Dense
 from keras.models import Model
 
@@ -6,11 +5,12 @@ import numpy as np
 import tensorflow as tf
 
 import extract_mzxml as em
-#%%
-data_file = 'C:/Users/CCheny/Documents/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output/cholesterol/ready_array2.npz'
+
+
+data_file = 'concated_data.npz'
 file = np.load(data_file, allow_pickle=True)
 data = file['arr_0']
-#%%
+
 normalize = np.amax(data) #for normalizing data
 np.random.shuffle(data) #randomize data list
 new_list = np.split(data, 2, axis=1) #split data into low peaks and high peaks
@@ -20,7 +20,7 @@ low_peaks = low_peaks.astype('float32') / normalize #normalize by dividing all v
 
 high_peaks = new_list[1]
 high_peaks = high_peaks.astype('float32') / normalize #normalize by dividing all values by the max value
-#%%
+
 X = low_peaks
 y = high_peaks
 
@@ -35,24 +35,42 @@ y_train = y[:ysplit, :, :] #80% of the high peaks data
 y_test = y[ysplit:, :, :] #20% of the high peaks data
 y_train = y_train.reshape(len(y_train), np.prod(y_train.shape[1:])) #reshape to 2D
 y_test = y_test.reshape(len(y_test), np.prod(y_test.shape[1:])) #reshape to 2D
-#%%
+
 encoding_dim = 100
 input_scan = Input(shape=(2000,))
 encoded = Dense(encoding_dim, activation='relu')(input_scan)
 decoded = Dense(2000, activation='sigmoid')(encoded)
 
 autoencoder = Model(input_scan, decoded)
-encoder = Model(input_scan, encoded)
 
-encoded_input = Input(shape=(encoding_dim,))
-decoder_layer = autoencoder.layers[-1]
-decoder = Model(encoded_input, decoder_layer(encoded_input))
-#%%
-autoencoder.compile(optimizer='adadelta', loss='poisson')
+autoencoder.compile(optimizer='adadelta', loss='cosine_proximity')
 autoencoder.fit(X_train, y_train,
                 epochs=50,
-                bathc_size=10,
+                batch_size=10,
                 validation_data=(X_test, y_test))
-#%%
-encoded_scans = encoder.predict(X_test)
-decoded_scans = decoder.predict(encoded_scans)
+
+predict_test = autoencoder.predict(X_test)
+
+X_test_norm = X_test * normalize
+predict_test_norm = predict_test * normalize
+y_test_norm = y_test * normalize
+
+import matplotlib.pyplot as plt
+fig, axs = plt.subplots(3, 1, figsize=(20,20))
+i = 3
+first = X_test_norm[i]
+second = predict_test_norm[i]
+third = Y_test_norm[i]
+top_max = Y_test_norm[i]
+
+axs[0].plot(range(0, 2000), first)
+axs[0].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
+print(np.amax(first))
+
+axs[1].plot(range(0, 2000), second)
+axs[1].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
+print(np.amax(second))
+
+axs[2].plot(range(0, 2000), third)
+axs[2].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
+print(np.amax(third))
