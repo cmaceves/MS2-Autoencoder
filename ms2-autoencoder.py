@@ -3,23 +3,30 @@ from keras.models import Model
 
 import numpy as np
 import tensorflow as tf
-
 data_file = 'concated_data.npz'
 file = np.load(data_file, allow_pickle=True)
 data = file['arr_0']
 
-normalize = np.amax(data) #for normalizing data
 np.random.shuffle(data) #randomize data list
 new_list = np.split(data, 2, axis=1) #split data into low peaks and high peaks
 
+def normalize_peaks(peaks_array):
+    for i in range(0, len(peaks_array)):
+        peak_max = np.amax(peaks_array[i])
+        if peak_max==0.0:
+            peaks_array[i] = peaks_array[i]
+        else:
+            peaks_array[i] = peaks_array[i] / peak_max
+    return peaks_array
+
 low_peaks = new_list[0]
-low_peaks = low_peaks.astype('float32') / normalize #normalize by dividing all values by the max value
+low_peaks = low_peaks.astype('float32')
 
 high_peaks = new_list[1]
-high_peaks = high_peaks.astype('float32') / normalize #normalize by dividing all values by the max value
+high_peaks = high_peaks.astype('float32')
 
-X = low_peaks
-y = high_peaks
+X = normalize_peaks(low_peaks)
+y = normalize_peaks(high_peaks)
 
 Xsplit = int(0.8*len(X))
 X_train = X[:Xsplit, :, :] #80% of the low peaks data
@@ -36,21 +43,18 @@ y_test = y_test.reshape(len(y_test), np.prod(y_test.shape[1:])) #reshape to 2D
 encoding_dim = 100
 input_scan = Input(shape=(2000,))
 encoded = Dense(encoding_dim, activation='relu')(input_scan)
-decoded = Dense(2000, activation='sigmoid')(encoded)
+decoded = Dense(2000, activation='relu')(encoded)
 
 autoencoder = Model(input_scan, decoded)
 
 autoencoder.compile(optimizer='adadelta', loss='cosine_proximity')
+autoencoder.summary()
 autoencoder.fit(X_train, y_train,
-                epochs=50,
-                batch_size=10,
+                epochs=100,
+                batch_size=200,
                 validation_data=(X_test, y_test))
 
 predict_test = autoencoder.predict(X_test)
-#scale everything back 
-X_test_norm = X_test * normalize
-predict_test_norm = predict_test * normalize
-Y_test_norm = y_test * normalize
 
 #plot graph of a predicted and test case
 import matplotlib.pyplot as plt
