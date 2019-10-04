@@ -42,16 +42,20 @@ y_test = y_test.reshape(len(y_test), np.prod(y_test.shape[1:])) #reshape to 2D
 
 encoding_dim = 100
 input_scan = Input(shape=(2000,))
-encoded = Dense(encoding_dim, activation='relu')(input_scan)
-decoded = Dense(2000, activation='relu')(encoded)
+hidden_1 = Dense(1000, activation='relu')(input_scan)
+hidden_2 = Dense(500, activation='relu')(hidden_1)
+encoded = Dense(encoding_dim, activation='relu')(hidden_2)
+hidden_3 = Dense(500, activation='relu')(encoded)
+hidden_4 = Dense(1000, activation='relu')(hidden_3)
+decoded = Dense(2000, activation='relu')(hidden_4)
 
 autoencoder = Model(input_scan, decoded)
 
-autoencoder.compile(optimizer='adadelta', loss='cosine_proximity')
+autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy'])
 autoencoder.summary()
 autoencoder.fit(X_train, y_train,
-                epochs=100,
-                batch_size=200,
+                epochs=200,
+                batch_size=100,
                 validation_data=(X_test, y_test))
 
 predict_test = autoencoder.predict(X_test)
