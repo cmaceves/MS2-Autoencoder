@@ -31,8 +31,11 @@ def stitch_npz(file_list):
 #hdf5 stitching
 def stitch_hdf5(file_list):
     #create and initialize empty hdf5 dataset
-    with h5py.File('large_data.hdf5', 'w') as f:
-        dataset = f.create_dataset('training', shape=(1,2,2000), maxshape=(None, 2, 2000))
+    with h5py.File('large_split_data.hdf5', 'w') as f:
+        dataset = f.create_dataset('low_peaks', shape=(1,1,2000), 
+                                    maxshape=(None, 1, 2000))
+        dataset = f.create_dataset('high_peaks', shape=(1,1,2000), 
+                                    maxshape=(None, 1, 2000))
         f.close()
 
     i_prev = 0
@@ -44,10 +47,19 @@ def stitch_hdf5(file_list):
         i_curr = size[0] + i_prev
         len_total += i_curr
 
-        with h5py.File('large_data.hdf5', 'a') as f:
-            dataset = f['training']
-            dataset.resize((len_total, 2, 2000))
-            dataset[i_prev:i_curr, :, :] = data
+        split_data = np.split(data, 2, axis=1)
+        low_peaks = split_data[0]
+        high_peaks = split_data[1]
+
+        with h5py.File('large_split_data.hdf5', 'a') as f:
+            dataset = f['low_peaks']
+            dataset.resize((len_total, 1, 2000))
+            dataset[i_prev:i_curr, :, :] = low_peaks
+
+            dataset = f['high_peaks']
+            dataset.resize((len_total, 1, 2000))
+            dataset[i_prev:i_curr, :, :] = high_peaks
+
             f.close()
         i_prev = i_curr
     print('saved all data to large_data.hdf5')
