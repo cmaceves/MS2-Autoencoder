@@ -2,7 +2,9 @@
 *.bat
 *.zip
 *.code-workspace
-*binned_dict.json
+*.json
+*.npy
+*.npz
 SpectrumFiltering-Desktop/
 SpectrumFiltering-Laptop/
 Archive/
