@@ -58,26 +58,7 @@ autoencoder.fit(X_train, y_train,
                 batch_size=100,
                 validation_data=(X_test, y_test))
 
-predict_test = autoencoder.predict(X_test)
-
-#plot graph of a predicted and test case
-import matplotlib.pyplot as plt
-fig, axs = plt.subplots(3, 1, figsize=(20,20))
-i = 3
-first = X_test_norm[i]
-second = predict_test_norm[i]
-third = Y_test_norm[i]
-top_max = Y_test_norm[i]
-
-axs[0].plot(range(0, 2000), first)
-axs[0].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(first))
-axs[1].plot(range(0, 2000), second)
-axs[1].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(second))
-axs[2].plot(range(0, 2000), third)
-axs[2].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(third))
+predicted = autoencoder.predict(X_test)
 
 #save Model architecture to json
 json_model = autoencoder.to_json()
