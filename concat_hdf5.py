@@ -48,10 +48,8 @@ def stitch_hdf5(file_list, norm):
     data in datasets will be normalized
     """
     with h5py.File('chemical_split_data.hdf5', 'w') as f: #create empty hdf5 file with two datasets
-        dataset = f.create_dataset('low_peaks', shape=(1,2000), 
-                                    maxshape=(None, 2000))
-        dataset = f.create_dataset('high_peaks', shape=(1,2000), 
-                                    maxshape=(None, 2000))
+        dataset = f.create_dataset('low_peaks', shape=(1,2000), maxshape=(None, 2000))
+        dataset = f.create_dataset('high_peaks', shape=(1,2000), maxshape=(None, 2000))
         f.close()
 
     i_prev = 0
