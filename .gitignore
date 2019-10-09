@@ -12,3 +12,4 @@ Archive/
 .vscode/
 stash/
 __pycache__
+test_batch/
