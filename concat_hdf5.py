@@ -23,15 +23,14 @@ def stitch_npz(file_list):
         data = extract_npz(filename)
         data_list.append(data)
 
-    big_data = np.concatenate(data_list, axis=0)
+    big_data = np.concatenate(data_list, axis=0) #concatenate here is going to take the most RAM
     print(big_data.shape)
 
     np.savez_compressed('concated_data', big_data)
 
 #hdf5 stitching
 def stitch_hdf5(file_list):
-    #create and initialize empty hdf5 dataset
-    with h5py.File('large_split_data.hdf5', 'w') as f:
+    with h5py.File('large_split_data.hdf5', 'w') as f: #create empty hdf5 file with two datasets
         dataset = f.create_dataset('low_peaks', shape=(1,1,2000), 
                                     maxshape=(None, 1, 2000))
         dataset = f.create_dataset('high_peaks', shape=(1,1,2000), 
@@ -41,7 +40,7 @@ def stitch_hdf5(file_list):
     i_prev = 0
     len_total = 0
     for filename in file_list:
-        print('extracting and appending %s' %filename)
+        print('extracting and appending %s to hdf5' %filename)
         data = extract_npz(filename)
         size = data.shape
         i_curr = size[0] + i_prev
@@ -52,11 +51,11 @@ def stitch_hdf5(file_list):
         high_peaks = split_data[1]
 
         with h5py.File('large_split_data.hdf5', 'a') as f:
-            dataset = f['low_peaks']
+            dataset = f['low_peaks'] #append to low_peaks dataset
             dataset.resize((len_total, 1, 2000))
             dataset[i_prev:i_curr, :, :] = low_peaks
 
-            dataset = f['high_peaks']
+            dataset = f['high_peaks'] #append to high_peaks dataset
             dataset.resize((len_total, 1, 2000))
             dataset[i_prev:i_curr, :, :] = high_peaks
 
