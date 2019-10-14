@@ -7,6 +7,7 @@ TOOL_FOLDER = "$baseDir/bin"
 
 process extractPairs {
     errorStrategy 'ignore'
+    validExitStatus 1
 
     publishDir "$params.outdir", mode: 'copy'
 
