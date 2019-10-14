@@ -2,78 +2,51 @@ from keras.layers import Input, Dense
 from keras.models import Model
 
 import numpy as np
+import h5py
 import tensorflow as tf
-data_file = 'concated_data.npz'
-file = np.load(data_file, allow_pickle=True)
-data = file['arr_0']
 
-np.random.shuffle(data) #randomize data list
-new_list = np.split(data, 2, axis=1) #split data into low peaks and high peaks
+data_file = 'chemical_split_data.hdf5'
+f = h5py.File(data_file, 'r')
+dataset_low = f['low_peaks']
+dataset_high = f['high_peaks']
+print(dataset_low.shape)
+print(dataset_high.shape)
 
-def normalize_peaks(peaks_array):
-    for i in range(0, len(peaks_array)):
-        peak_max = np.amax(peaks_array[i])
-        if peak_max==0.0:
-            peaks_array[i] = peaks_array[i]
-        else:
-            peaks_array[i] = peaks_array[i] / peak_max
-    return peaks_array
-
-low_peaks = new_list[0]
-low_peaks = low_peaks.astype('float32')
-
-high_peaks = new_list[1]
-high_peaks = high_peaks.astype('float32')
-
-X = normalize_peaks(low_peaks)
-y = normalize_peaks(high_peaks)
-
-Xsplit = int(0.8*len(X))
-X_train = X[:Xsplit, :, :] #80% of the low peaks data
-X_test = X[Xsplit:, :, :] #20% of the high peaks data
-X_train = X_train.reshape(len(X_train), np.prod(X_train.shape[1:])) #reshape to 2D
-X_test = X_test.reshape(len(X_test), np.prod(X_test.shape[1:])) #reshape to 2D
-
-ysplit = int(0.8*len(y))
-y_train = y[:ysplit, :, :] #80% of the high peaks data
-y_test = y[ysplit:, :, :] #20% of the high peaks data
-y_train = y_train.reshape(len(y_train), np.prod(y_train.shape[1:])) #reshape to 2D
-y_test = y_test.reshape(len(y_test), np.prod(y_test.shape[1:])) #reshape to 2D
+def generator(X_data, y_data, batch_size):
+    print('generator initiated')
+    steps_per_epoch = X_data.shape[0]
+    number_of_batches = steps_per_epoch // batch_size
+    i = 0
+    
+    while True:
+        X_batch = dataset_low[i*batch_size:(i+1)*batch_size]
+        y_batch = dataset_high[i*batch_size:(i+1)*batch_size]
+        i += 1
+        yield X_batch, y_batch
+        print('\ngenerator yielded a batch %s' %i)
+        
+        if i >= number_of_batches:
+            i = 0
 
 encoding_dim = 100
 input_scan = Input(shape=(2000,))
-encoded = Dense(encoding_dim, activation='relu')(input_scan)
-decoded = Dense(2000, activation='relu')(encoded)
+hidden_1 = Dense(1000, activation='relu')(input_scan)
+hidden_2 = Dense(500, activation='relu')(hidden_1)
+encoded = Dense(encoding_dim, activation='relu')(hidden_2)
+hidden_3 = Dense(500, activation='relu')(encoded)
+hidden_4 = Dense(1000, activation='relu')(hidden_3)
+decoded = Dense(2000, activation='relu')(hidden_4)
 
 autoencoder = Model(input_scan, decoded)
 
-autoencoder.compile(optimizer='adadelta', loss='cosine_proximity')
+autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy'])
 autoencoder.summary()
-autoencoder.fit(X_train, y_train,
-                epochs=100,
-                batch_size=200,
-                validation_data=(X_test, y_test))
 
-predict_test = autoencoder.predict(X_test)
-
-#plot graph of a predicted and test case
-import matplotlib.pyplot as plt
-fig, axs = plt.subplots(3, 1, figsize=(20,20))
-i = 3
-first = X_test_norm[i]
-second = predict_test_norm[i]
-third = Y_test_norm[i]
-top_max = Y_test_norm[i]
-
-axs[0].plot(range(0, 2000), first)
-axs[0].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(first))
-axs[1].plot(range(0, 2000), second)
-axs[1].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(second))
-axs[2].plot(range(0, 2000), third)
-axs[2].set_ylim(bottom=0, top=np.amax(top_max), auto=True)
-print(np.amax(third))
+batch_size = 100
+autoencoder.fit_generator(generator=generator(dataset_low, dataset_high, batch_size), 
+                          max_queue_size=10, 
+                          steps_per_epoch=dataset_low.shape[0] // batch_size, 
+                          epochs=50)
 
 #save Model architecture to json
 json_model = autoencoder.to_json()
