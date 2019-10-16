@@ -41,13 +41,13 @@ def stitch_npz(file_list):
     np.savez_compressed('concated_data', big_data)
 
 #hdf5 stitching
-def stitch_hdf5(file_list, norm):
+def stitch_hdf5(file_list, norm, name='big_data.hdf5'):
     """
     concatenate data into hdf5 format for reading from disk
     outputs one hdf5 file with two datasets
     data in datasets will be normalized
     """
-    with h5py.File('chemical_split_data.hdf5', 'w') as f: #create empty hdf5 file with two datasets
+    with h5py.File(name, 'w') as f: #create empty hdf5 file with two datasets
         dataset = f.create_dataset('low_peaks', shape=(1,2000), maxshape=(None, 2000))
         dataset = f.create_dataset('high_peaks', shape=(1,2000), maxshape=(None, 2000))
         f.close()
@@ -63,7 +63,7 @@ def stitch_hdf5(file_list, norm):
 
         low_peaks, high_peaks = split_reshape(data, norm)
 
-        with h5py.File('chemical_split_data.hdf5', 'a') as f:
+        with h5py.File(name, 'a') as f:
             dataset = f['low_peaks'] #append to low_peaks dataset
             dataset.resize((len_total, 2000))
             dataset[i_prev:i_curr, :] = low_peaks
@@ -74,4 +74,13 @@ def stitch_hdf5(file_list, norm):
 
             f.close()
         i_prev = i_curr
-    print('saved all data to chemical_split_data.hdf5')
+    print('saved all data to %s' % name)
+
+def get_file_list(path, data_name):
+    file_list = []
+    for i in os.listdir(path):
+        for filename in os.listdir(os.path.join(path, i)):
+            if filename == data_name:
+                file_list.append(os.path.join(path, i, filename))
+                print(os.path.join(path, i, filename))
+    return file_list
