@@ -1,0 +1,30 @@
+import os
+import argparse
+import concat_hdf5 as ch5
+
+parser = argparse.ArgumentParser()
+parser.add_argument('data_path', help='path to the data being concatenated')
+parser.add_argument('data_name', help='name of the data file being concatenated')
+parser.add_argument('--name', default='big_data.hdf5', help='name of the resulting data file')
+parser.add_argument('--norm', default='l2', help='the norm to use to normalize data')
+parser.add_argument('--conv1d', default='False', help="do/don't reshape for Conv1D")
+
+args = parser.parse_args()
+path = args.data_path
+data_name = args.data_name
+name = args.name
+norm = args.norm
+conv1d = args.conv1d
+
+#'/home/cchen/autoencode_output/'
+#'C:/Users/CCheny/Documents/UC San Diego - Junction/Bioinformatics/MS2-Autoencoder/Output'
+
+file_list = ch5.get_file_list(path, data_name)
+
+if conv1d == 'False':
+    ch5.stitch_hdf5(file_list, norm=norm, name=name)
+    print('operations complete')
+
+elif conv1d == 'True':
+    ch5.stitch_hdf5_Conv1D(file_list, norm=norm, name=name)
+    print('operations complete')
