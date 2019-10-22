@@ -30,8 +30,12 @@ def generator(X_data, y_data, batch_size):
 input_size = 2000
 encoding_dim = 100
 input_scan = Input(shape=(input_size,))
-encoded = Dense(encoding_dim, activation='relu')(input_scan)
-decoded = Dense(input_size, activation='relu')(encoded)
+hidden_1 = Dense(1000, activation='relu')(input_scan)
+hidden_2 = Dense(500, activation='relu')(hidden_1)
+encoded = Dense(encoding_dim, activation='relu')(hidden_2)
+hidden_3 = Dense(500, activation='relu')(encoded)
+hidden_4 = Dense(1000, activation='relu')(hidden_3)
+decoded = Dense(input_size, activation='relu')(hidden_4)
 
 autoencoder = Model(input_scan, decoded)
 
