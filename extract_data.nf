@@ -6,8 +6,10 @@ params.outdir = "$baseDir/output_nf"
 TOOL_FOLDER = "$baseDir/bin"
 
 process extractPairs {
-    errorStrategy 'ignore'
-    validExitStatus 1
+    //errorStrategy 'ignore'
+    errorStrategy 'terminate'
+    echo true
+    //validExitStatus 1
 
     publishDir "$params.outdir", mode: 'copy'
 
@@ -23,15 +25,15 @@ process extractPairs {
         """
         export LC_ALL=C
 
-        $TOOL_FOLDER/msconvert $inputFile --outfile ${file_id}.mzXML --mzXML
+        $TOOL_FOLDER/msconvert "$inputFile" --outfile "${file_id}.mzXML" --mzXML
 
-        mkdir ${file_id}_outdir
-        python $TOOL_FOLDER/main.py ${file_id}.mzXML ${file_id}_outdir
+        mkdir "${file_id}_outdir"
+        python $TOOL_FOLDER/main.py "${file_id}.mzXML" "${file_id}_outdir"
         """
     else if ( extension == 'mzXML' )
         """
-        mkdir ${file_id}_outdir
-        python $TOOL_FOLDER/main.py $inputFile ${file_id}_outdir
+        mkdir "${file_id}_outdir"
+        python $TOOL_FOLDER/main.py "$inputFile" "${file_id}_outdir"
         """
     else
         error "Invalid Extension"
