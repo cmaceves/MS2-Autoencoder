@@ -28,17 +28,13 @@ def fit_model(model, X_data, y_data):
                             epochs=1)
     return model
 
-def save_model(model, name):
+def save_model(model, name_json, name_h5):
     json_model = model.to_json()
-    json_file = open('', 'w')
+    json_file = open(name_json, 'w')
     json_file.write(json_model)
 
-    yaml_model = model.to_yaml()
-    yaml_file = open('', 'w')
-    yaml_file.write(yaml_model)
-
-    model.save('')
-    print('model has been save to .json, .yaml, .h5')
+    model.save(name_h5)
+    print('model has been save to .json, .h5')
 
 def model_Conv1D():
     input_size = 2000

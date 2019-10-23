@@ -46,7 +46,7 @@ batch_size = 5000
 autoencoder.fit_generator(generator=generator(dataset_low, dataset_high, batch_size), 
                           max_queue_size=20, 
                           steps_per_epoch=dataset_low.shape[0] // batch_size, 
-                          epochs=50)
+                          epochs=1)
 
 #save Model architecture to json
 json_model = autoencoder.to_json()
