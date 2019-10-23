@@ -20,13 +20,42 @@ def generator(X_data, y_data, batch_size):
         if i >= number_of_batches:
             i = 0
 
+def test_generator(X_data, batch_size):
+    print('generator initiated')
+    steps_per_epoch = X_data.shape[0]
+    number_of_batches = steps_per_epoch // batch_size
+    i = 0
+
+    while True: 
+        X_batch = X_data[i*batch_size:(i+1)*batch_size]
+        i += 1
+        yield X_batch
+        print('\ngenerator yielded a batch %s' %i)
+
+        if i >= number_of_batches:
+            i = 0
+
 def fit_model(model, X_data, y_data):
     batch_size = 5000
     model.fit_generator(generator=generator(X_data, y_data, batch_size), 
-                            max_queue_size=20, 
-                            steps_per_epoch=X_data.shape[0] // batch_size, 
-                            epochs=1)
+                        max_queue_size=20, 
+                        steps_per_epoch=X_data.shape[0] // batch_size, 
+                        epochs=1)
     return model
+
+def predict_model(model, X_data):
+    batch_size = 50
+    prediction = model.predict_generator(generator=test_generator(X_data, batch_size),
+                                            max_queue_size=20,
+                                            steps=X_data.shape[0] // batch_size)
+    return prediction
+
+def eval_model(model, X_data, y_data):
+    batch_size = 50
+    evaluation = model.evaluate_generator(generator=generator(X_data, y_data, batch_size),
+                                            max_queue_size=20,
+                                            steps=X_data.shape[0] // batch_size)
+    return evaluation
 
 def save_model(model, name_json, name_h5):
     json_model = model.to_json()
