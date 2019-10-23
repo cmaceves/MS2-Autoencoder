@@ -17,4 +17,4 @@ test_cluster_MSV000082049:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000082049/ccms_peak/**.mzML" -with-trace -resume
 
 test_cluster_MSV000084072:
-	nextflow run extract_data.nf -c cluster.config --inputSpectra='/data/massive/MSV000084072/ccms_peak/positive/**.mzML -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084072/ccms_peak/positive/**.mzML" -with-trace -resume
