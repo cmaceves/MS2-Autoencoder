@@ -108,7 +108,7 @@ def stitch_hdf5(file_list, norm, name='big_data.hdf5'):
             pass
     print('saved all data to %s' % name)
 
-def stitch_hdf5_Conv1D(file_list, norm, name='big_data.hdf5'):
+def stitch_hdf5_Conv1D(file_list, norm, name='big_data_conv1d.hdf5'):
     """
     concatenate data into hdf5 format for reading from disk
     outputs one hdf5 file with two datasets in the shape for keras.input.Conv1D
