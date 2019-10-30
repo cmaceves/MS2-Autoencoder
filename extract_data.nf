@@ -6,8 +6,8 @@ params.outdir = "$baseDir/output_nf"
 TOOL_FOLDER = "$baseDir/bin"
 
 process extractPairs {
-    //errorStrategy 'ignore'
-    errorStrategy 'terminate'
+    errorStrategy 'ignore'
+    //errorStrategy 'terminate'
     echo true
     //validExitStatus 1
 
