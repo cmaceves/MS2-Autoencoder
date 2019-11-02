@@ -47,40 +47,19 @@ test_cluster_Chemicalstandards:
 84286:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084286/ccms_peak/GNPS00002/**.mzML" -with-trace -resume
 
+
 84237:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084237/peak/mzML/*" -with-trace -resume
-
-84118:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084118/ccms_peak/raw/**.mzML" -with-trace -resume
-
-84117:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084117/ccms_peak/mzxml/**.mzML" -with-trace -resume
-
-84102:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084102/ccms_peak/1907_Caps_Contaminant/**.mzML" -with-trace -resume
-
-84100:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084100/peak/mzML/**.mzML" -with-trace -resume
-
-84092:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084092/ccms_peak/**.mzML" -with-trace -resume
-
-84030:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084030/ccms_peak/*" -with-trace -resume
-
-84020:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000084020/ccms_peak/data_raw/*/**.mzML" -with-trace -resume
-
-83835:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083835/ccms_peak/EtOAc_Pos_RAW/*" -with-trace -resume
-838351:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083835/ccms_peak/MeOH_Pos_RAW/*" -with-trace -resume
-
-83825:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/Fecal/*" -with-trace -resume
-838251:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/Plasma/*" -with-trace -resume
-838252:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/Serum/*" -with-trace -resume
-838253:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/**.mzML" -with-trace -resume
