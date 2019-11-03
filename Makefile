@@ -66,6 +66,23 @@ test_cluster_Chemicalstandards:
 
 83756:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083756/ccms_peak/*" -with-trace -resume
-
-83605:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083605/ccms_peak/mzXML/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083541/ccms_peak/raw_files/all_raw_data/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083490/peak/1902_Abagyan_screening/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083475/ccms_peak/RAW/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083473/ccms_peak/RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083472/ccms_peak/RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083471/ccms_peak/1902_NIH_Synthesis_v2_UV_RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083470/ccms_peak/NIH_NaturalProducts_RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083469/ccms_peak/NIST1950SRM_RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083449/ccms_peak/NIH_synthesis_UV_raw/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083396/ccms_peak/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083395/ccms_peak/RAW/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083388/ccms_peak/Positive Mode/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083387/ccms_peak/Raw/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083383/ccms_peak/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083320/ccms_peak/data/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083306/ccms_peak/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083300/ccms_peak/Data_raw/Positive/*/*" -with-trace -resume
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083297/ccms_peak/RawData/*" -with-trace -resume
+	
