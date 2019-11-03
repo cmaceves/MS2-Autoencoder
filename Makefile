@@ -63,3 +63,9 @@ test_cluster_Chemicalstandards:
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/Plasma/*" -with-trace -resume
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/Serum/*" -with-trace -resume
 	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083825/ccms_peak/Positive/**.mzML" -with-trace -resume
+
+83756:
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083756/ccms_peak/*" -with-trace -resume
+
+83605:
+	nextflow run extract_data.nf -c cluster.config --inputSpectra="/data/massive/MSV000083605/ccms_peak/mzXML/*/*" -with-trace -resume
