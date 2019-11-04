@@ -1,7 +1,7 @@
 from keras.layers import Input, Dense, Conv1D, MaxPooling1D, UpSampling1D
 from keras.models import Model
 
-import numpy as numpy
+import numpy as np
 import h5py
 
 def generator(X_data, y_data, batch_size):
@@ -57,13 +57,16 @@ def eval_model(model, X_data, y_data):
                                             steps=X_data.shape[0] // batch_size)
     return evaluation
 
-def save_model(model, name_json, name_h5):
-    json_model = model.to_json()
-    json_file = open(name_json, 'w')
-    json_file.write(json_model)
-
+def save_model(model, name_h5):
     model.save(name_h5)
-    print('model has been save to .json, .h5')
+    print('model has been saved to .h5')
+
+def save_history(history, history_file):
+    json.dump(history, open(history_file, 'w'))
+    print('training history has been saved to .json')
+
+def load_history(history_file):
+    history_dict = json.load(open(history_file, 'r'))
 
 def model_Conv1D():
     input_size = 2000
