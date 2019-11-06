@@ -2,6 +2,8 @@ from keras.layers import Input, Dense, Conv1D, MaxPooling1D, UpSampling1D
 from keras.models import Model
 
 import numpy as np
+import pickle
+import json
 import h5py
 
 def generator(X_data, y_data, batch_size):
@@ -61,12 +63,15 @@ def save_model(model, name_h5):
     model.save(name_h5)
     print('model has been saved to .h5')
 
-def save_history(history, history_file):
-    json.dump(history, open(history_file, 'w'))
-    print('training history has been saved to .json')
+def save_history(history, filename):
+    with open(filename, 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
+    print('training history has been saved to %s' %filename)
 
 def load_history(history_file):
-    history_dict = json.load(open(history_file, 'r'))
+    file = open(history_file)
+    history_dict = pickle.load(file)
+    return history_dict
 
 def model_Conv1D():
     input_size = 2000

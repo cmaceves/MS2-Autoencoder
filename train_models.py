@@ -23,25 +23,24 @@ dataset_high = f['high_peaks']
 if model=='conv1d':
     model = ms2_model.model_Conv1D()
     model = ms2_model.fit_model(model, dataset_low, dataset_high)
-    ms2_model.save_history(model.history, 'conv1d_history.json')
-    ms2_model.save_model(model, join(outdir, 'conv1d.h5'))    
+    ms2_model.save_model(model, join(outdir, 'conv1d.h5'))   
+    ms2_model.save_history(model.history, 'conv1d_history.pickle') 
 
 elif model=='deepautoencoder':
     autoencoder = ms2_model.model_deep_autoencoder()
     autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
-    ms2_model.save_history(autoencoder.history, 'deepautoencoder_history.json')
     ms2_model.save_model(autoencoder, join(outdir, 'deepautoencoder.h5'))
+    ms2_model.save_history(autoencoder.history, 'deepautoencoder_history.pickle')
 
 elif model=='autoencoder':
     autoencoder = ms2_model.model_autoencoder()
     autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
-    ms2_model.save_history(autoencoder.history, 'autoencoder_history.json')
     ms2_model.save_model(autoencoder, join(outdir, 'autoencoder.h5'))
+    ms2_model.save_history(autoencoder.history, 'autoencoder_history.pickle')
 
 elif model=='variationalautoencoder':
     autoencoder = ms2_model.model_variational_autoencoder()
     autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
-    ms2_model.save_history(autoencoder.history, 'variationalautoencoder_history.json')
     ms2_model.save_model(autoencoder, join(outdir, 'variationalautoencoder.h5'))
 
 print('operations complete')
