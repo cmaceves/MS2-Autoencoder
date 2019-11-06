@@ -36,7 +36,7 @@ def test_generator(X_data, batch_size):
             i = 0
 
 def fit_model(model, X_data, y_data):
-    batch_size = 5000
+    batch_size = 10000
     model.fit_generator(generator=generator(X_data, y_data, batch_size), 
                         max_queue_size=20, 
                         steps_per_epoch=X_data.shape[0] // batch_size, 
@@ -124,7 +124,7 @@ def model_autoencoder():
     decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy'])
+    autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy', metrics=['accuracy'])
     return autoencoder
 
 def model_variational_autoencoder():
