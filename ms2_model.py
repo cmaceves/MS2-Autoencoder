@@ -7,7 +7,7 @@ import json
 import h5py
 
 def generator(X_data, y_data, batch_size):
-    print('generator initiated')
+    print('training generator initiated')
     steps_per_epoch = X_data.shape[0]
     number_of_batches = steps_per_epoch // batch_size
     i = 0
@@ -19,6 +19,21 @@ def generator(X_data, y_data, batch_size):
         yield X_batch, y_batch
         print('\ngenerator yielded a batch %s' %i)
         
+        if i >= number_of_batches:
+            i = 0
+
+def validation_generator(X_data, y_data, batch_size):
+    print('validation generator initiated')
+    steps_per_epoch = X_data.shape[0]
+    number_of_batches = steps_per_epoch // batch_size
+    i = 0
+    while True:
+        X_batch = X_data[i*batch_size:(i+1)*batch_size]
+        y_batch = y_data[i*batch_size:(i+1)*batch_size]
+        i += 1
+        yield X_batch, y_batch
+        print('\nvalidation generator yielded a batch %s' %i)
+
         if i >= number_of_batches:
             i = 0
 
@@ -39,23 +54,34 @@ def test_generator(X_data, batch_size):
 
 def fit_model(model, X_data, y_data):
     batch_size = 10000
-    model.fit_generator(generator=generator(X_data, y_data, batch_size), 
-                        max_queue_size=20, 
+    model.fit_generator(generator=generator(X_data, y_data, batch_size),
+                        max_queue_size=40, 
                         steps_per_epoch=X_data.shape[0] // batch_size, 
                         epochs=1)
     return model
 
+def fit_val_model(model, X_data, y_data, X_val, y_val):
+    batch_size = 10000
+    batch_size_val = 1000
+    model.fit_generator(generator=generator(X_data, y_data, batch_size),
+                        validation_data=validation_generator(X_val, y_val, batch_size_val),
+                        validation_steps=X_val.shape[0],
+                        steps_per_epoch=X_data.shape[0] // batch_size,
+                        max_queue_size=40,
+                        epochs=1)
+    return model
+
 def predict_model(model, X_data):
-    batch_size = 50
+    batch_size = 100
     prediction = model.predict_generator(generator=test_generator(X_data, batch_size),
-                                            max_queue_size=20,
+                                            max_queue_size=10,
                                             steps=X_data.shape[0] // batch_size)
     return prediction
 
 def eval_model(model, X_data, y_data):
-    batch_size = 50
+    batch_size = 10000
     evaluation = model.evaluate_generator(generator=generator(X_data, y_data, batch_size),
-                                            max_queue_size=20,
+                                            max_queue_size=40,
                                             steps=X_data.shape[0] // batch_size)
     return evaluation
 
@@ -129,7 +155,7 @@ def model_autoencoder():
     decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy', metrics=['accuracy'])
+    autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy', metrics=['accuracy', 'cosine_proximity'])
     return autoencoder
 
 def model_variational_autoencoder():

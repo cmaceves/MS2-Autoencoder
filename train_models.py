@@ -8,17 +8,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('data', help='training data')
 parser.add_argument('model', help='select the model being trained')
 parser.add_argument('path', help='directory path, differs based on user/system')
+parser.add_argument('val_data', help='validation data')
 
 args = parser.parse_args()
 data = args.data
 model = args.model
 path = args.path
+val_data = args.val_data
 
 outdir = join(path, 'models/')
 
 f = h5py.File(data, 'r')
 dataset_low = f['low_peaks']
 dataset_high = f['high_peaks']
+g = h5py.File(val_data, 'r')
+X_val = g['low_peaks']
+y_val = g['high_peaks']
 
 if model=='conv1d':
     model = ms2_model.model_Conv1D()
@@ -34,6 +39,7 @@ elif model=='deepautoencoder':
 
 elif model=='autoencoder':
     autoencoder = ms2_model.model_autoencoder()
+    #autoencoder = ms2_model.fit_val_model(autoencoder, dataset_low, dataset_high, X_val, y_val)
     autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
     ms2_model.save_model(autoencoder, join(outdir, 'autoencoder.h5'))
     ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder_history.pickle'))

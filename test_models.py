@@ -21,9 +21,9 @@ f = h5py.File(data, 'r')
 dataset_low = f['low_peaks']
 dataset_high = f['high_peaks']
 
-prediction = ms2_model.predict_model(model, dataset_low)
+#prediction = ms2_model.predict_model(model, dataset_low)
 evaluation = ms2_model.eval_model(model, dataset_low, dataset_high)
 print('Testing accuracy: ', evaluation[1])
 
-save_path = os.path.join(dirname, 'predictions.npy')
-np.save(save_path, prediction)
+#save_path = os.path.join(dirname, 'predictions.npy')
+#np.save(save_path, prediction)
