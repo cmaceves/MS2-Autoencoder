@@ -1,5 +1,7 @@
 from keras.layers import Input, Dense, Conv1D, MaxPooling1D, UpSampling1D
 from keras.models import Model
+from keras import backend as K
+from keras.callbacks import TensorBoard
 
 import numpy as np
 import pickle
@@ -7,7 +9,7 @@ import json
 import h5py
 
 def generator(X_data, y_data, batch_size):
-    print('training generator initiated')
+    print('generator initiated')
     steps_per_epoch = X_data.shape[0]
     number_of_batches = steps_per_epoch // batch_size
     i = 0
@@ -18,6 +20,22 @@ def generator(X_data, y_data, batch_size):
         i += 1
         yield X_batch, y_batch
         print('\ngenerator yielded a batch %s' %i)
+        
+        if i >= number_of_batches:
+            i = 0
+
+def training_generator(X_data, y_data, batch_size):
+    print('training generator initiated')
+    steps_per_epoch = X_data.shape[0]
+    number_of_batches = steps_per_epoch // batch_size
+    i = 0
+    
+    while True:
+        X_batch = X_data[i*batch_size:(i+1)*batch_size]
+        y_batch = y_data[i*batch_size:(i+1)*batch_size]
+        i += 1
+        yield X_batch, y_batch
+        print('\ntraining generator yielded a batch %s' %i)
         
         if i >= number_of_batches:
             i = 0
@@ -57,7 +75,8 @@ def fit_model(model, X_data, y_data):
     model.fit_generator(generator=generator(X_data, y_data, batch_size),
                         max_queue_size=40, 
                         steps_per_epoch=X_data.shape[0] // batch_size, 
-                        epochs=1)
+                        epochs=1,
+                        callbacks=[TensorBoard(log_dir='/tmp/autoencoder')])
     return model
 
 def fit_val_model(model, X_data, y_data, X_val, y_val):
@@ -67,6 +86,20 @@ def fit_val_model(model, X_data, y_data, X_val, y_val):
                         validation_data=validation_generator(X_val, y_val, batch_size_val),
                         validation_steps=X_val.shape[0],
                         steps_per_epoch=X_data.shape[0] // batch_size,
+                        max_queue_size=40,
+                        epochs=1)
+    return model
+
+def fit_val_model2(model, X_data, y_data):
+    batch_size = 10000
+    split = 0.8
+    train_len = int(0.8 * len(X_data))
+    val_len = int(0.2 * len(X_data))
+
+    model.fit_generator(generator=generator(X_data[:train_len], y_data[:train_len], batch_size),
+                        validation_data=validation_generator(X_data[train_len:], y_data[train_len:], batch_size),
+                        validation_steps=val_len,
+                        steps_per_epoch=train_len // batch_size,
                         max_queue_size=40,
                         epochs=1)
     return model
@@ -155,7 +188,7 @@ def model_autoencoder():
     decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy', metrics=['accuracy', 'cosine_proximity'])
+    autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
     return autoencoder
 
 def model_variational_autoencoder():
