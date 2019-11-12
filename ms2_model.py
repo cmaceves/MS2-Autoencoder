@@ -185,7 +185,7 @@ def model_autoencoder():
     input_scan = Input(shape=(input_size,))
     encoded = Dense(encoding_dim, activation='relu')(input_scan)
 
-    decoded = Dense(input_size, activation='relu')(encoded)
+    decoded = Dense(input_size, activation='sigmoid')(encoded)
 
     autoencoder = Model(input_scan, decoded)
     autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
