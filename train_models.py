@@ -1,6 +1,6 @@
 import ms2_model
 import numpy as np
-import h5py 
+import h5py
 from os.path import join
 import argparse
 
@@ -31,7 +31,7 @@ else:
 if model=='conv1d':
     model = ms2_model.model_Conv1D()
     model = ms2_model.fit_model(model, dataset_low, dataset_high)
-    ms2_model.save_model(model, join(outdir, 'conv1d.h5'))   
+    ms2_model.save_model(model, join(outdir, 'conv1d.h5'))
     ms2_model.save_history(model.history, 'conv1d_history.pickle') 
 
 elif model=='deepautoencoder':
