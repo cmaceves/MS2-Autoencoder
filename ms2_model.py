@@ -93,8 +93,8 @@ def fit_val_model(model, X_data, y_data, X_val, y_val):
 def fit_val_model2(model, X_data, y_data):
     batch_size = 10000
     split = 0.8
-    train_len = int(0.8 * len(X_data))
-    val_len = int(0.2 * len(X_data))
+    train_len = int(split * len(X_data))
+    val_len = int((1 - split) * len(X_data))
 
     model.fit_generator(generator=generator(X_data[:train_len], y_data[:train_len], batch_size),
                         validation_data=validation_generator(X_data[train_len:], y_data[train_len:], batch_size),
@@ -185,10 +185,10 @@ def model_autoencoder():
     input_scan = Input(shape=(input_size,))
     encoded = Dense(encoding_dim, activation='relu')(input_scan)
 
-    decoded = Dense(input_size, activation='sigmoid')(encoded)
+    decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
+    autoencoder.compile(optimizer='SGD', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
     return autoencoder
 
 def model_variational_autoencoder():
