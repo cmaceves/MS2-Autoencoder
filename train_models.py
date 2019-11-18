@@ -28,24 +28,26 @@ if args.val_data:
 else:
     print('no val data')
 
+ms2_model.session_config()
+
 if model=='conv1d':
     model = ms2_model.model_Conv1D()
     model = ms2_model.fit_model(model, dataset_low, dataset_high)
     ms2_model.save_model(model, join(outdir, 'conv1d.h5'))
-    ms2_model.save_history(model.history, 'conv1d_history.pickle') 
+    ms2_model.save_history(model.history, join(outdir, 'conv1d_history.pickle'))
 
 elif model=='deepautoencoder':
     autoencoder = ms2_model.model_deep_autoencoder()
     autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
     ms2_model.save_model(autoencoder, join(outdir, 'deepautoencoder.h5'))
-    ms2_model.save_history(autoencoder.history, 'deepautoencoder_history.pickle')
+    ms2_model.save_history(autoencoder.history, join(outdir, 'deepautoencoder_history.pickle'))
 
 elif model=='autoencoder':
     autoencoder = ms2_model.model_autoencoder()
     #autoencoder = ms2_model.fit_val_model2(autoencoder, dataset_low, dataset_high)
-    autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
-    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder.h5'))
-    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder_history.pickle'))
+    autoencoder = ms2_model.fit_model(autoencoder, dataset_high, dataset_high)
+    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder_10high_adadelta.h5'))
+    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder_10high_adadelta_history.pickle'))
 
 elif model=='variationalautoencoder':
     autoencoder = ms2_model.model_variational_autoencoder()

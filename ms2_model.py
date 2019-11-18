@@ -3,10 +3,16 @@ from keras.models import Model
 from keras import backend as K
 from keras.callbacks import TensorBoard
 
+import tensorflow as tf
 import numpy as np
 import pickle
 import json
 import h5py
+
+def session_config(allocation=1):
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=allocation)
+    sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+    K.set_session(sess)
 
 def generator(X_data, y_data, batch_size):
     print('generator initiated')
@@ -188,7 +194,7 @@ def model_autoencoder():
     decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='SGD', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
+    autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
     return autoencoder
 
 def model_variational_autoencoder():
