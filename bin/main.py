@@ -54,7 +54,7 @@ elif args.match_index_file: #tests the get_match_scans() function
 else: #complete run through
     em.count_MS2(data)
     id_list_ms2 = em.find_MS2(data, directory)
-    match_index_dict = em.search_MS2_matches(data, id_list_ms2)
+    match_index_dict = em.search_MS2_matches(data, id_list_ms2, rt_tol=0.1666)
     print('--- %s seconds runtime ---' %(str(time.time() - start_time)))
     current_time = time.time()
     em.output_file(match_index_dict, directory, match_index=True)
