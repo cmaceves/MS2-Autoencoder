@@ -43,9 +43,9 @@ elif model=='deepautoencoder':
 elif model=='autoencoder':
     autoencoder = ms2_model.model_autoencoder()
     #autoencoder = ms2_model.fit_val_model2(autoencoder, dataset_low, dataset_high)
-    autoencoder = ms2_model.fit_model(autoencoder, dataset_high, dataset_high)
-    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder_high.h5'))
-    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder_high_history.pickle'))
+    autoencoder = ms2_model.fit_model(autoencoder, dataset_low, dataset_high)
+    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder.h5'))
+    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder_history.pickle'))
 
 elif model=='variationalautoencoder':
     autoencoder = ms2_model.model_variational_autoencoder()
