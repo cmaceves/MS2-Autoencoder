@@ -1,4 +1,5 @@
 from keras.layers import Input, Dense, Conv1D, MaxPooling1D, UpSampling1D
+from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Model
 from keras import backend as K
 from keras.callbacks import TensorBoard
@@ -11,7 +12,9 @@ import h5py
 
 def session_config(allocation=1):
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=allocation)
-    sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+    config = tf.ConfigProto(gpu_options=gpu_options)
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
     K.set_session(sess)
 
 def generator(X_data, y_data, batch_size):
@@ -187,11 +190,11 @@ def model_deep_autoencoder():
 
 def model_autoencoder():
     input_size = 2000
-    encoding_dim = 100
+    encoding_dim = 1000
     input_scan = Input(shape=(input_size,))
-    encoded = Dense(encoding_dim, activation='relu')(input_scan)
+    encoded = Dense(encoding_dim, activation=LeakyReLU())(input_scan) #sigmoid doesn't work here
 
-    decoded = Dense(input_size, activation='relu')(encoded)
+    decoded = Dense(input_size, activation=LeakyReLU())(encoded) #sigmoid and softmax doesn't work here
 
     autoencoder = Model(input_scan, decoded)
     autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
