@@ -80,7 +80,7 @@ def test_generator(X_data, batch_size):
             i = 0
 
 def fit_model(model, X_data, y_data):
-    batch_size = 10000
+    batch_size = 10
     model.fit_generator(generator=generator(X_data, y_data, batch_size),
                         max_queue_size=40, 
                         steps_per_epoch=X_data.shape[0] // batch_size, 
@@ -190,14 +190,14 @@ def model_deep_autoencoder():
 
 def model_autoencoder():
     input_size = 2000
-    encoding_dim = 1000
+    encoding_dim = 2000
     input_scan = Input(shape=(input_size,))
-    encoded = Dense(encoding_dim, activation=LeakyReLU())(input_scan) #sigmoid doesn't work here
+    encoded = Dense(encoding_dim, activation='relu')(input_scan)
 
-    decoded = Dense(input_size, activation=LeakyReLU())(encoded) #sigmoid and softmax doesn't work here
+    decoded = Dense(input_size, activation='relu')(encoded)
 
     autoencoder = Model(input_scan, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='cosine_proximity', metrics=['accuracy', 'cosine_proximity'])
+    autoencoder.compile(optimizer='adam', loss='cosine_proximity', metrics=['accuracy'])
     return autoencoder
 
 def model_variational_autoencoder():

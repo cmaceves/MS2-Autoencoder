@@ -28,7 +28,7 @@ if args.val_data:
 else:
     print('no val data')
 
-ms2_model.session_config(1)
+#ms2_model.session_config(1)
 
 if model=='conv1d':
     model = ms2_model.model_Conv1D()
@@ -45,9 +45,9 @@ elif model=='deepautoencoder':
 elif model=='autoencoder':
     autoencoder = ms2_model.model_autoencoder()
     #autoencoder = ms2_model.fit_val_model2(autoencoder, dataset_low, dataset_high)
-    autoencoder = ms2_model.fit_model(autoencoder, dataset_high, dataset_high)
-    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder/', 'autoencoder_10b_leaky.h5'))
-    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder/', 'autoencoder_10b_leaky_history.pickle'))
+    autoencoder = ms2_model.fit_model(autoencoder, dataset_high[:10], dataset_high[:10])
+    ms2_model.save_model(autoencoder, join(outdir, 'autoencoder/', 'autoencoder.h5'))
+    ms2_model.save_history(autoencoder.history, join(outdir, 'autoencoder/', 'autoencoderhistory.pickle'))
 
 elif model=='variationalautoencoder':
     autoencoder = ms2_model.model_variational_autoencoder()
