@@ -44,6 +44,7 @@ MS2 Autoencoder is built on Keras for Python. The purpose of MS2 Autoencoder is 
 ### 4. Evaluate and Predict models
 1. Jupyter/keras load validate.ipynb is the Jupyter Notebook for loading models and visualizating predictions
 2. Models prediction function is built on tensorflow-gpu with gpu memory allocation and session declaration
+3. Predictions are written into an mgf to undergo library search at GNPS
 
 ### 5. Spectra denoising
 1. Hopefully cosine proximity is closer to 1.0 than 0.0
